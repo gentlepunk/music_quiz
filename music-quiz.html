@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음표 맞추기 퀴즈</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #eef2f7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .score {
+            background: #fff;
+            border-radius: 999px;
+            padding: 7px 28px;
+            font-size: 0.95rem;
+            color: #718096;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+        }
+        .score b { color: #3182ce; font-size: 1.1rem; }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 22px 28px 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        #staff-svg { display: block; }
+
+        @keyframes noteIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .ngrp { animation: noteIn 0.22s ease-out; }
+
+        .feedback {
+            font-size: 1.05rem;
+            font-weight: 600;
+            min-height: 34px;
+            line-height: 34px;
+            padding: 0 20px;
+            border-radius: 8px;
+            text-align: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .feedback.correct { color: #22543d; background: #c6f6d5; }
+        .feedback.wrong   { color: #742a2a; background: #fed7d7; }
+
+        /* ── Piano ─────────────────────────────── */
+        .piano {
+            position: relative;
+            height: 145px;
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.22));
+            /* width set by JS */
+        }
+
+        .key {
+            position: absolute;
+            top: 0;
+            border-radius: 0 0 8px 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            transition: background 0.07s, transform 0.07s, border-color 0.15s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* White keys */
+        .key.white {
+            width: 38px;
+            height: 145px;
+            background: linear-gradient(to bottom, #f5f5f5, #ffffff);
+            border: 1px solid #c8c8c8;
+            border-bottom-width: 4px;
+            z-index: 1;
+            padding-bottom: 8px;
+            gap: 2px;
+        }
+        .key.white:hover { background: linear-gradient(to bottom, #dbeafe, #eff6ff); }
+        .key.white:active {
+            transform: translateY(2px);
+            background: linear-gradient(to bottom, #bfdbfe, #dbeafe);
+        }
+        .key.white .solfege {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #4a5568;
+        }
+        .key.white .note-id {
+            font-size: 0.65rem;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+
+        /* Black keys */
+        .key.black {
+            width: 22px;
+            height: 88px;
+            background: linear-gradient(to bottom, #1a1a1a, #3a3a3a);
+            border: 1px solid #111;
+            border-bottom-width: 3px;
+            z-index: 2;
+            padding-bottom: 5px;
+            gap: 1px;
+        }
+        .key.black:hover  { background: linear-gradient(to bottom, #2a3a5a, #3a4a6a); }
+        .key.black:active {
+            transform: translateY(2px);
+            background: linear-gradient(to bottom, #3a4a7a, #4a5a8a);
+        }
+        .key.black .note-id {
+            font-size: 0.44rem;
+            color: #ccc;
+            font-weight: 500;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* Correct / Wrong states */
+        .key.correct {
+            background: linear-gradient(to bottom, #9ae6b4, #c6f6d5) !important;
+            border-color: #38a169 !important;
+        }
+        .key.wrong {
+            background: linear-gradient(to bottom, #fc8181, #fed7d7) !important;
+            border-color: #e53e3e !important;
+        }
+        .key.white.correct .solfege,
+        .key.white.correct .note-id { color: #22543d; }
+        .key.white.wrong   .solfege,
+        .key.white.wrong   .note-id { color: #742a2a; }
+        .key.black.correct .note-id { color: #22543d; }
+        .key.black.wrong   .note-id { color: #742a2a; }
+    </style>
+</head>
+<body>
+
+<h1>🎵 음표 맞추기</h1>
+
+<div class="score">
+    점수: <b id="sc">0</b> / <b id="tot">0</b>
+</div>
+
+<div class="card">
+    <!--
+        Staff lines (y): F5=55, D5=75, B4=95, G4=115, E4=135
+        White note y positions (10px/step):
+          B5=25  A5=35  G5=45  F5=55  E5=65  D5=75  C5=85
+          B4=95  A4=105 G4=115 F4=125 E4=135 D4=145 C4=155
+        Black notes share y with their letter name (C#=C pos, Db=D pos, etc.)
+        Ledger lines: y≥155 → ledger at 155 ; y≤35 → ledger at 35
+    -->
+    <svg id="staff-svg" viewBox="0 0 490 220" width="490" height="220"
+         xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<div class="feedback" id="fb"></div>
+
+<div class="piano" id="piano"></div>
+
+<script>
+/* ── Note data ─────────────────────────────────────────────── */
+
+const WHITE_NOTES = [
+    { id:'C4', label:'도', y:155, acc:null, keyId:'C4' },
+    { id:'D4', label:'레', y:145, acc:null, keyId:'D4' },
+    { id:'E4', label:'미', y:135, acc:null, keyId:'E4' },
+    { id:'F4', label:'파', y:125, acc:null, keyId:'F4' },
+    { id:'G4', label:'솔', y:115, acc:null, keyId:'G4' },
+    { id:'A4', label:'라', y:105, acc:null, keyId:'A4' },
+    { id:'B4', label:'시', y: 95, acc:null, keyId:'B4' },
+    { id:'C5', label:'도', y: 85, acc:null, keyId:'C5' },
+    { id:'D5', label:'레', y: 75, acc:null, keyId:'D5' },
+    { id:'E5', label:'미', y: 65, acc:null, keyId:'E5' },
+    { id:'F5', label:'파', y: 55, acc:null, keyId:'F5' },
+    { id:'G5', label:'솔', y: 45, acc:null, keyId:'G5' },
+    { id:'A5', label:'라', y: 35, acc:null, keyId:'A5' },
+    { id:'B5', label:'시', y: 25, acc:null, keyId:'B5' },
+];
+
+// Sharp and flat variants of each black key.
+// Note head y = position of the letter name (C#4 sits on C4's line, Db4 on D4's line).
+const BLACK_NOTES = [
+    { id:'C#4', y:155, acc:'sharp', keyId:'Cs4' },
+    { id:'D♭4', y:145, acc:'flat',  keyId:'Cs4' },
+    { id:'D#4', y:145, acc:'sharp', keyId:'Ds4' },
+    { id:'E♭4', y:135, acc:'flat',  keyId:'Ds4' },
+    { id:'F#4', y:125, acc:'sharp', keyId:'Fs4' },
+    { id:'G♭4', y:115, acc:'flat',  keyId:'Fs4' },
+    { id:'G#4', y:115, acc:'sharp', keyId:'Gs4' },
+    { id:'A♭4', y:105, acc:'flat',  keyId:'Gs4' },
+    { id:'A#4', y:105, acc:'sharp', keyId:'As4' },
+    { id:'B♭4', y: 95, acc:'flat',  keyId:'As4' },
+    { id:'C#5', y: 85, acc:'sharp', keyId:'Cs5' },
+    { id:'D♭5', y: 75, acc:'flat',  keyId:'Cs5' },
+    { id:'D#5', y: 75, acc:'sharp', keyId:'Ds5' },
+    { id:'E♭5', y: 65, acc:'flat',  keyId:'Ds5' },
+    { id:'F#5', y: 55, acc:'sharp', keyId:'Fs5' },
+    { id:'G♭5', y: 45, acc:'flat',  keyId:'Fs5' },
+    { id:'G#5', y: 45, acc:'sharp', keyId:'Gs5' },
+    { id:'A♭5', y: 35, acc:'flat',  keyId:'Gs5' },
+    { id:'A#5', y: 35, acc:'sharp', keyId:'As5' },
+    { id:'B♭5', y: 25, acc:'flat',  keyId:'As5' },
+];
+
+const ALL_NOTES = [...WHITE_NOTES, ...BLACK_NOTES];
+
+// Black key piano key definitions: whiteLeft = index of left neighboring white key
+const BLACK_KEY_DEFS = [
+    { keyId:'Cs4', sharp:'C#4', flat:'D♭4', whiteLeft: 0 },
+    { keyId:'Ds4', sharp:'D#4', flat:'E♭4', whiteLeft: 1 },
+    { keyId:'Fs4', sharp:'F#4', flat:'G♭4', whiteLeft: 3 },
+    { keyId:'Gs4', sharp:'G#4', flat:'A♭4', whiteLeft: 4 },
+    { keyId:'As4', sharp:'A#4', flat:'B♭4', whiteLeft: 5 },
+    { keyId:'Cs5', sharp:'C#5', flat:'D♭5', whiteLeft: 7 },
+    { keyId:'Ds5', sharp:'D#5', flat:'E♭5', whiteLeft: 8 },
+    { keyId:'Fs5', sharp:'F#5', flat:'G♭5', whiteLeft:10 },
+    { keyId:'Gs5', sharp:'G#5', flat:'A♭5', whiteLeft:11 },
+    { keyId:'As5', sharp:'A#5', flat:'B♭5', whiteLeft:12 },
+];
+
+const WHITE_W = 38;                          // white key width px
+const BLACK_W = 22;                          // black key width px
+const STAFF_Y = [55, 75, 95, 115, 135];
+const NS = 'http://www.w3.org/2000/svg';
+
+let cur = null, sc = 0, tot = 0, ok = true;
+
+/* ── SVG helpers ───────────────────────────────────────────── */
+
+function mk(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+}
+
+function initStaff() {
+    const svg = document.getElementById('staff-svg');
+
+    STAFF_Y.forEach(y => svg.appendChild(mk('line', {
+        x1: 22, y1: y, x2: 468, y2: y,
+        stroke: '#333', 'stroke-width': 1.5
+    })));
+
+    svg.appendChild(mk('line', { x1:22,  y1:55, x2:22,  y2:135, stroke:'#333', 'stroke-width':2 }));
+    svg.appendChild(mk('line', { x1:468, y1:55, x2:468, y2:135, stroke:'#333', 'stroke-width':2 }));
+
+    const clef = document.createElementNS(NS, 'text');
+    clef.setAttribute('x', '24');
+    clef.setAttribute('y', '152');
+    clef.setAttribute('font-size', '107');
+    clef.setAttribute('font-family', 'Georgia, "Times New Roman", serif');
+    clef.setAttribute('fill', '#222');
+    clef.textContent = '𝄞';
+    svg.appendChild(clef);
+}
+
+function drawNote(note) {
+    document.querySelectorAll('.ngrp').forEach(e => e.remove());
+
+    const svg = document.getElementById('staff-svg');
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'ngrp');
+
+    const x = 280, y = note.y;
+
+    // Ledger line below staff (C4 and enharmonics at y=155)
+    if (y >= 155) {
+        g.appendChild(mk('line', {
+            x1: x-19, y1: 155, x2: x+19, y2: 155,
+            stroke: '#333', 'stroke-width': 1.5
+        }));
+    }
+    // Ledger line above staff (A5 and higher: y≤35)
+    if (y <= 35) {
+        g.appendChild(mk('line', {
+            x1: x-19, y1: 35, x2: x+19, y2: 35,
+            stroke: '#333', 'stroke-width': 1.5
+        }));
+    }
+
+    // Accidental (♯ or ♭) drawn to the left of the note head
+    if (note.acc) {
+        const sym = note.acc === 'sharp' ? '♯' : '♭';
+        // flat hangs lower visually, so adjust baseline accordingly
+        const ay = note.acc === 'flat' ? y + 7 : y + 5;
+        const acc = document.createElementNS(NS, 'text');
+        acc.setAttribute('x', String(x - 19));
+        acc.setAttribute('y', String(ay));
+        acc.setAttribute('font-size', '17');
+        acc.setAttribute('font-family', 'Georgia, serif');
+        acc.setAttribute('fill', '#111');
+        acc.setAttribute('text-anchor', 'middle');
+        acc.textContent = sym;
+        g.appendChild(acc);
+    }
+
+    // Note head (filled, slightly tilted ellipse)
+    g.appendChild(mk('ellipse', {
+        cx: x, cy: y, rx: 9, ry: 6.5,
+        fill: '#111',
+        transform: `rotate(-15,${x},${y})`
+    }));
+
+    // Stem: up (right side) for notes on/below B4 (y≥95), down (left) above
+    const up = y >= 95;
+    g.appendChild(mk('line', {
+        x1: up ? x+8.5 : x-8.5,
+        y1: up ? y-2   : y+2,
+        x2: up ? x+8.5 : x-8.5,
+        y2: up ? y-42  : y+42,
+        stroke: '#111', 'stroke-width': 2
+    }));
+
+    svg.appendChild(g);
+}
+
+/* ── Piano builder ─────────────────────────────────────────── */
+
+function buildPiano() {
+    const piano = document.getElementById('piano');
+    piano.style.width = (WHITE_NOTES.length * WHITE_W) + 'px';
+
+    // White keys
+    WHITE_NOTES.forEach((n, i) => {
+        const k = document.createElement('div');
+        k.className = 'key white';
+        k.style.left = (i * WHITE_W) + 'px';
+        k.dataset.keyid = n.keyId;
+        k.innerHTML =
+            `<span class="note-id">${n.id}</span>` +
+            `<span class="solfege">${n.label}</span>`;
+        k.addEventListener('click', () => answer(n.keyId, k));
+        piano.appendChild(k);
+    });
+
+    // Black keys (positioned over the gap between adjacent white keys)
+    BLACK_KEY_DEFS.forEach(bk => {
+        const k = document.createElement('div');
+        k.className = 'key black';
+        // Center black key over the boundary between whiteLeft and whiteLeft+1
+        k.style.left = (bk.whiteLeft * WHITE_W + WHITE_W - Math.floor(BLACK_W / 2)) + 'px';
+        k.dataset.keyid = bk.keyId;
+        k.innerHTML =
+            `<span class="note-id">${bk.sharp}</span>` +
+            `<span class="note-id">${bk.flat}</span>`;
+        k.addEventListener('click', () => answer(bk.keyId, k));
+        piano.appendChild(k);
+    });
+}
+
+/* ── Quiz logic ────────────────────────────────────────────── */
+
+function next() {
+    ok = true;
+    const fb = document.getElementById('fb');
+    fb.textContent = '';
+    fb.className = 'feedback';
+    document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
+    cur = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
+    drawNote(cur);
+}
+
+function answer(keyId, keyEl) {
+    if (!ok) return;
+    ok = false;
+    document.getElementById('tot').textContent = ++tot;
+
+    const fb = document.getElementById('fb');
+    if (keyId === cur.keyId) {
+        document.getElementById('sc').textContent = ++sc;
+        keyEl.classList.add('correct');
+        fb.textContent = '✓ 정답입니다!';
+        fb.className = 'feedback correct';
+    } else {
+        keyEl.classList.add('wrong');
+        document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
+        fb.textContent = `✗ 오답! 정답은 ${cur.id}`;
+        fb.className = 'feedback wrong';
+    }
+
+    setTimeout(next, 1500);
+}
+
+initStaff();
+buildPiano();
+next();
+</script>
+</body>
+</html>
