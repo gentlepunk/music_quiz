@@ -35,6 +35,20 @@
         }
         .score b { color: #3182ce; font-size: 1.1rem; }
 
+        .combo {
+            background: #fff;
+            border-radius: 999px;
+            padding: 7px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .combo.show { display: block; }
+        .combo.c2  { color: #2b6cb0; }
+        .combo.c5  { color: #c05621; }
+        .combo.c10 { color: #c53030; font-weight: 800; }
+
         .card {
             background: #fff;
             border-radius: 18px;
@@ -240,8 +254,9 @@
 
 <h1>🎵 음표 맞추기</h1>
 
-<div class="score">
-    점수: <b id="sc">0</b> / <b id="tot">0</b>
+<div style="display:flex; gap:10px; align-items:center;">
+    <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
+    <div class="combo" id="combo"></div>
 </div>
 
 <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
@@ -329,7 +344,7 @@ const BLACK_W = 22;                          // black key width px
 const STAFF_Y = [55, 75, 95, 115, 135];
 const NS = 'http://www.w3.org/2000/svg';
 
-let cur = null, sc = 0, tot = 0, ok = true;
+let cur = null, sc = 0, tot = 0, ok = true, combo = 0;
 
 /* ── Timer ─────────────────────────────────────────────────── */
 const TICK_MS = 50;
@@ -378,7 +393,16 @@ function timeout() {
     const fb = document.getElementById('fb');
     fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`;
     fb.className = 'feedback wrong';
+    combo = 0;
+    renderCombo();
     setTimeout(next, 1500);
+}
+
+function renderCombo() {
+    const el = document.getElementById('combo');
+    if (combo < 2) { el.className = 'combo'; return; }
+    el.textContent = `🔥 ${combo} 콤보!`;
+    el.className = 'combo show ' + (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2');
 }
 
 /* ── SVG helpers ───────────────────────────────────────────── */
@@ -527,14 +551,17 @@ function answer(keyId, keyEl) {
     if (keyId === cur.keyId) {
         document.getElementById('sc').textContent = ++sc;
         keyEl.classList.add('correct');
+        combo++;
         fb.textContent = '✓ 정답입니다!';
         fb.className = 'feedback correct';
     } else {
         keyEl.classList.add('wrong');
         document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
+        combo = 0;
         fb.textContent = `✗ 오답! 정답은 ${cur.id}`;
         fb.className = 'feedback wrong';
     }
+    renderCombo();
 
     setTimeout(next, 1500);
 }
