@@ -167,9 +167,76 @@
         .key.white.wrong   .note-id { color: #742a2a; }
         .key.black.correct .note-id { color: #22543d; }
         .key.black.wrong   .note-id { color: #742a2a; }
+
+        /* ── Settings ──────────────────────────── */
+        .settings-wrap {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            z-index: 100;
+        }
+        .settings-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            cursor: pointer;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            transition: background 0.15s, border-color 0.15s;
+            user-select: none;
+        }
+        .settings-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
+        .settings-btn .gear { font-size: 1rem; }
+        .settings-btn .cur-label { font-weight: 600; color: #3182ce; }
+
+        .settings-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: #fff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            overflow: hidden;
+            min-width: 120px;
+        }
+        .settings-dropdown.open { display: block; }
+
+        .dropdown-item {
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            color: #4a5568;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .dropdown-item:hover { background: #ebf4ff; }
+        .dropdown-item.active {
+            background: #ebf4ff;
+            color: #2b6cb0;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
+
+<div class="settings-wrap">
+    <div class="settings-btn" id="settings-btn">
+        <span class="gear">⚙</span>
+        <span class="cur-label" id="cur-label">5초</span>
+    </div>
+    <div class="settings-dropdown" id="settings-dropdown">
+        <div class="dropdown-item active" data-sec="5">5초</div>
+        <div class="dropdown-item"        data-sec="7">7초</div>
+        <div class="dropdown-item"        data-sec="10">10초</div>
+        <div class="dropdown-item"        data-sec="0">OFF</div>
+    </div>
+</div>
 
 <h1>🎵 음표 맞추기</h1>
 
@@ -265,14 +332,24 @@ const NS = 'http://www.w3.org/2000/svg';
 let cur = null, sc = 0, tot = 0, ok = true;
 
 /* ── Timer ─────────────────────────────────────────────────── */
-const TIMER_SEC = 5;
-const TICK_MS   = 50;
+const TICK_MS = 50;
+let settingSec  = 5;   // chosen in settings (applies next question)
+let timerSec    = 5;   // active for current question
 let timerInterval = null;
-let timeLeft = TIMER_SEC;
+let timeLeft = 5;
 
 function startTimer() {
     clearInterval(timerInterval);
-    timeLeft = TIMER_SEC;
+    timerSec = settingSec;
+
+    const wrap = document.querySelector('.timer-wrap');
+    if (timerSec === 0) {
+        wrap.style.visibility = 'hidden';
+        return;
+    }
+
+    wrap.style.visibility = 'visible';
+    timeLeft = timerSec;
     renderTimer();
     timerInterval = setInterval(() => {
         timeLeft = Math.max(0, timeLeft - TICK_MS / 1000);
@@ -288,7 +365,7 @@ function stopTimer() {
 
 function renderTimer() {
     const bar = document.getElementById('timer-bar');
-    bar.style.width = (timeLeft / TIMER_SEC * 100) + '%';
+    bar.style.width = (timeLeft / timerSec * 100) + '%';
     bar.classList.toggle('danger', timeLeft <= 2);
 }
 
@@ -461,6 +538,30 @@ function answer(keyId, keyEl) {
 
     setTimeout(next, 1500);
 }
+
+/* ── Settings dropdown ─────────────────────────────────────── */
+const settingsBtn      = document.getElementById('settings-btn');
+const settingsDropdown = document.getElementById('settings-dropdown');
+const curLabel         = document.getElementById('cur-label');
+
+settingsBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    settingsDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', () => settingsDropdown.classList.remove('open'));
+
+settingsDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', e => {
+        e.stopPropagation();
+        const sec = parseInt(item.dataset.sec, 10);
+        settingSec = sec;
+        curLabel.textContent = sec === 0 ? 'OFF' : sec + '초';
+        settingsDropdown.querySelectorAll('.dropdown-item')
+            .forEach(i => i.classList.toggle('active', i === item));
+        settingsDropdown.classList.remove('open');
+    });
+});
 
 initStaff();
 buildPiano();
