@@ -25,6 +25,11 @@
             color: #2d3748;
         }
 
+        /* ── Screen management ─────────────────────────── */
+        .screen { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+        .screen.active { display: flex; }
+
+        /* ── Shared: Score ─────────────────────────────── */
         .score {
             background: #fff;
             border-radius: 999px;
@@ -35,6 +40,7 @@
         }
         .score b { color: #3182ce; font-size: 1.1rem; }
 
+        /* ── Shared: Combo ─────────────────────────────── */
         .combo {
             background: #fff;
             border-radius: 999px;
@@ -49,6 +55,7 @@
         .combo.c5  { color: #c05621; }
         .combo.c10 { color: #c53030; font-weight: 800; }
 
+        /* ── Shared: Card ──────────────────────────────── */
         .card {
             background: #fff;
             border-radius: 18px;
@@ -64,7 +71,7 @@
         }
         .ngrp { animation: noteIn 0.22s ease-out; }
 
-        /* Timer bar */
+        /* ── Timer bar ─────────────────────────────────── */
         .timer-wrap {
             width: 490px;
             height: 10px;
@@ -80,6 +87,7 @@
         }
         .timer-bar.danger { background: #f56565; }
 
+        /* ── Feedback ──────────────────────────────────── */
         .feedback {
             font-size: 1.05rem;
             font-weight: 600;
@@ -93,12 +101,11 @@
         .feedback.correct { color: #22543d; background: #c6f6d5; }
         .feedback.wrong   { color: #742a2a; background: #fed7d7; }
 
-        /* ── Piano ─────────────────────────────── */
+        /* ── Piano ─────────────────────────────────────── */
         .piano {
             position: relative;
             height: 145px;
             filter: drop-shadow(0 6px 16px rgba(0,0,0,0.22));
-            /* width set by JS */
         }
 
         .key {
@@ -115,7 +122,6 @@
             -webkit-user-select: none;
         }
 
-        /* White keys */
         .key.white {
             width: 38px;
             height: 145px;
@@ -131,18 +137,9 @@
             transform: translateY(2px);
             background: linear-gradient(to bottom, #bfdbfe, #dbeafe);
         }
-        .key.white .solfege {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #4a5568;
-        }
-        .key.white .note-id {
-            font-size: 0.65rem;
-            color: #a0aec0;
-            font-weight: 500;
-        }
+        .key.white .solfege { font-size: 0.72rem; font-weight: 600; color: #718096; }
+        .key.white .note-id { font-size: 0.82rem; color: #2d3748; font-weight: 400; }
 
-        /* Black keys */
         .key.black {
             width: 22px;
             height: 88px;
@@ -166,7 +163,6 @@
             text-align: center;
         }
 
-        /* Correct / Wrong states */
         .key.correct {
             background: linear-gradient(to bottom, #9ae6b4, #c6f6d5) !important;
             border-color: #38a169 !important;
@@ -182,124 +178,285 @@
         .key.black.correct .note-id { color: #22543d; }
         .key.black.wrong   .note-id { color: #742a2a; }
 
-        /* ── Settings ──────────────────────────── */
-        .settings-wrap {
-            position: fixed;
-            top: 18px;
-            right: 22px;
-            z-index: 100;
-        }
-        .settings-btn {
+        /* ── Start Screen ───────────────────────────────── */
+        .start-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             display: flex;
-            align-items: center;
-            gap: 5px;
-            background: #fff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 999px;
-            padding: 6px 14px;
-            font-size: 0.9rem;
-            color: #4a5568;
-            cursor: pointer;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-            transition: background 0.15s, border-color 0.15s;
-            user-select: none;
+            flex-direction: column;
+            gap: 24px;
+            width: 420px;
         }
-        .settings-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
-        .settings-btn .gear { font-size: 1rem; }
-        .settings-btn .cur-label { font-weight: 600; color: #3182ce; }
 
-        .settings-dropdown {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            right: 0;
-            background: #fff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            overflow: hidden;
-            min-width: 120px;
-        }
-        .settings-dropdown.open { display: block; }
+        .option-group { display: flex; flex-direction: column; gap: 10px; }
 
-        .dropdown-item {
-            padding: 10px 18px;
-            font-size: 0.9rem;
-            color: #4a5568;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-        .dropdown-item:hover { background: #ebf4ff; }
-        .dropdown-item.active {
-            background: #ebf4ff;
-            color: #2b6cb0;
+        .option-group-label {
+            font-size: 0.82rem;
             font-weight: 700;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
+
+        .option-btns { display: flex; gap: 8px; }
+
+        .opt-btn {
+            flex: 1;
+            padding: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, color 0.15s;
+        }
+        .opt-btn:hover { background: #ebf4ff; border-color: #90cdf4; }
+        .opt-btn.active { background: #ebf4ff; border-color: #3182ce; color: #2b6cb0; }
+
+        .start-btn {
+            padding: 14px 0;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #3182ce, #2b6cb0);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(49,130,206,0.35);
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .start-btn:hover  { opacity: 0.92; transform: translateY(-1px); }
+        .start-btn:active { transform: translateY(0); }
+
+        /* ── Quiz Screen ────────────────────────────────── */
+        .quiz-top-row { display: flex; gap: 12px; align-items: center; }
+
+        .progress {
+            background: #fff;
+            border-radius: 999px;
+            padding: 7px 22px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #718096;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+        }
+        .progress .cur { color: #3182ce; font-size: 1.05rem; }
+
+        /* ── Result Screen ──────────────────────────────── */
+        .result-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 420px;
+        }
+
+        .result-score-big {
+            text-align: center;
+            padding: 8px 0;
+        }
+        .result-score-big .big-num {
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #2d3748;
+            line-height: 1;
+        }
+        .result-score-big .big-num span { color: #3182ce; }
+        .result-score-big .sub {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #a0aec0;
+            margin-top: 6px;
+        }
+
+        .result-meta {
+            display: flex;
+            justify-content: space-around;
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 14px 0;
+        }
+        .result-meta-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .result-meta-item .label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .result-meta-item .value { font-size: 1.2rem; font-weight: 700; color: #4a5568; }
+
+        .wrong-section-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+        }
+
+        .wrong-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 190px;
+            overflow-y: auto;
+        }
+
+        .wrong-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: #fff5f5;
+        }
+        .wrong-item .note-name { font-weight: 700; color: #c53030; font-size: 1rem; }
+        .wrong-item .wrong-count {
+            font-size: 0.85rem;
+            color: #718096;
+            background: #fed7d7;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-weight: 600;
+        }
+
+        .no-wrong {
+            text-align: center;
+            color: #38a169;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 12px 0;
+        }
+
+        .restart-btn {
+            padding: 14px 0;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #3182ce, #2b6cb0);
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(49,130,206,0.35);
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .restart-btn:hover  { opacity: 0.92; transform: translateY(-1px); }
+        .restart-btn:active { transform: translateY(0); }
     </style>
 </head>
 <body>
 
-<div class="settings-wrap">
-    <div class="settings-btn" id="settings-btn">
-        <span class="gear">⚙</span>
-        <span class="cur-label" id="cur-label">5초</span>
-    </div>
-    <div class="settings-dropdown" id="settings-dropdown">
-        <div class="dropdown-item active" data-sec="5">5초</div>
-        <div class="dropdown-item"        data-sec="7">7초</div>
-        <div class="dropdown-item"        data-sec="10">10초</div>
-        <div class="dropdown-item"        data-sec="0">OFF</div>
+<!-- ══ Start Screen ══════════════════════════════════════════════ -->
+<div id="screen-start" class="screen active">
+    <h1>🎵 음표 맞추기</h1>
+    <div class="start-card">
+        <div class="option-group">
+            <div class="option-group-label">문제 수</div>
+            <div class="option-btns" id="q-btns">
+                <button class="opt-btn active" data-q="10">10문제</button>
+                <button class="opt-btn"        data-q="20">20문제</button>
+                <button class="opt-btn"        data-q="30">30문제</button>
+            </div>
+        </div>
+        <div class="option-group">
+            <div class="option-group-label">제한 시간</div>
+            <div class="option-btns" id="t-btns">
+                <button class="opt-btn active" data-sec="5">5초</button>
+                <button class="opt-btn"        data-sec="7">7초</button>
+                <button class="opt-btn"        data-sec="10">10초</button>
+                <button class="opt-btn"        data-sec="0">OFF</button>
+            </div>
+        </div>
+        <button class="start-btn" id="start-btn">시작하기 →</button>
     </div>
 </div>
 
-<h1>🎵 음표 맞추기</h1>
+<!-- ══ Quiz Screen ═══════════════════════════════════════════════ -->
+<div id="screen-quiz" class="screen">
+    <h1>🎵 음표 맞추기</h1>
 
-<div style="display:flex; gap:10px; align-items:center;">
-    <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
+    <div class="quiz-top-row">
+        <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
+        <div class="progress"><span class="cur" id="prog-cur">0</span> / <span id="prog-tot">10</span></div>
+    </div>
+
     <div class="combo" id="combo"></div>
+
+    <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+
+    <div class="card">
+        <!--
+            Staff lines (y): F5=55, D5=75, B4=95, G4=115, E4=135
+            White note y positions (10px/step):
+              B5=25  A5=35  G5=45  F5=55  E5=65  D5=75  C5=85
+              B4=95  A4=105 G4=115 F4=125 E4=135 D4=145 C4=155
+        -->
+        <svg id="staff-svg" viewBox="0 0 490 220" width="490" height="220"
+             xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <div class="feedback" id="fb"></div>
+
+    <div class="piano" id="piano"></div>
 </div>
 
-<div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-
-<div class="card">
-    <!--
-        Staff lines (y): F5=55, D5=75, B4=95, G4=115, E4=135
-        White note y positions (10px/step):
-          B5=25  A5=35  G5=45  F5=55  E5=65  D5=75  C5=85
-          B4=95  A4=105 G4=115 F4=125 E4=135 D4=145 C4=155
-        Black notes share y with their letter name (C#=C pos, Db=D pos, etc.)
-        Ledger lines: y≥155 → ledger at 155 ; y≤35 → ledger at 35
-    -->
-    <svg id="staff-svg" viewBox="0 0 490 220" width="490" height="220"
-         xmlns="http://www.w3.org/2000/svg"></svg>
+<!-- ══ Result Screen ═════════════════════════════════════════════ -->
+<div id="screen-result" class="screen">
+    <h1>🎵 결과</h1>
+    <div class="result-card">
+        <div class="result-score-big">
+            <div class="big-num"><span id="res-sc">0</span> / <span id="res-tot">10</span></div>
+            <div class="sub">정답</div>
+        </div>
+        <div class="result-meta">
+            <div class="result-meta-item">
+                <span class="label">정답률</span>
+                <span class="value" id="res-rate">0%</span>
+            </div>
+            <div class="result-meta-item">
+                <span class="label">최고 콤보</span>
+                <span class="value" id="res-combo">0</span>
+            </div>
+            <div class="result-meta-item">
+                <span class="label">총 시간</span>
+                <span class="value" id="res-time">0초</span>
+            </div>
+        </div>
+        <div class="wrong-section-title">틀린 음 통계</div>
+        <div class="wrong-list" id="wrong-list"></div>
+        <button class="restart-btn" id="restart-btn">처음으로 돌아가기</button>
+    </div>
 </div>
-
-<div class="feedback" id="fb"></div>
-
-<div class="piano" id="piano"></div>
 
 <script>
-/* ── Note data ─────────────────────────────────────────────── */
+/* ── Note data ─────────────────────────────────────────────────── */
 
 const WHITE_NOTES = [
-    { id:'C4', label:'도', y:155, acc:null, keyId:'C4' },
-    { id:'D4', label:'레', y:145, acc:null, keyId:'D4' },
-    { id:'E4', label:'미', y:135, acc:null, keyId:'E4' },
-    { id:'F4', label:'파', y:125, acc:null, keyId:'F4' },
-    { id:'G4', label:'솔', y:115, acc:null, keyId:'G4' },
-    { id:'A4', label:'라', y:105, acc:null, keyId:'A4' },
-    { id:'B4', label:'시', y: 95, acc:null, keyId:'B4' },
-    { id:'C5', label:'도', y: 85, acc:null, keyId:'C5' },
-    { id:'D5', label:'레', y: 75, acc:null, keyId:'D5' },
-    { id:'E5', label:'미', y: 65, acc:null, keyId:'E5' },
-    { id:'F5', label:'파', y: 55, acc:null, keyId:'F5' },
-    { id:'G5', label:'솔', y: 45, acc:null, keyId:'G5' },
-    { id:'A5', label:'라', y: 35, acc:null, keyId:'A5' },
-    { id:'B5', label:'시', y: 25, acc:null, keyId:'B5' },
+    { id:'C4', label:'다', y:155, acc:null, keyId:'C4' },
+    { id:'D4', label:'라', y:145, acc:null, keyId:'D4' },
+    { id:'E4', label:'마', y:135, acc:null, keyId:'E4' },
+    { id:'F4', label:'바', y:125, acc:null, keyId:'F4' },
+    { id:'G4', label:'사', y:115, acc:null, keyId:'G4' },
+    { id:'A4', label:'가', y:105, acc:null, keyId:'A4' },
+    { id:'B4', label:'나', y: 95, acc:null, keyId:'B4' },
+    { id:'C5', label:'다', y: 85, acc:null, keyId:'C5' },
+    { id:'D5', label:'라', y: 75, acc:null, keyId:'D5' },
+    { id:'E5', label:'마', y: 65, acc:null, keyId:'E5' },
+    { id:'F5', label:'바', y: 55, acc:null, keyId:'F5' },
+    { id:'G5', label:'사', y: 45, acc:null, keyId:'G5' },
+    { id:'A5', label:'가', y: 35, acc:null, keyId:'A5' },
+    { id:'B5', label:'나', y: 25, acc:null, keyId:'B5' },
 ];
 
-// Sharp and flat variants of each black key.
-// Note head y = position of the letter name (C#4 sits on C4's line, Db4 on D4's line).
 const BLACK_NOTES = [
     { id:'C#4', y:155, acc:'sharp', keyId:'Cs4' },
     { id:'D♭4', y:145, acc:'flat',  keyId:'Cs4' },
@@ -325,7 +482,6 @@ const BLACK_NOTES = [
 
 const ALL_NOTES = [...WHITE_NOTES, ...BLACK_NOTES];
 
-// Black key piano key definitions: whiteLeft = index of left neighboring white key
 const BLACK_KEY_DEFS = [
     { keyId:'Cs4', sharp:'C#4', flat:'D♭4', whiteLeft: 0 },
     { keyId:'Ds4', sharp:'D#4', flat:'E♭4', whiteLeft: 1 },
@@ -339,17 +495,21 @@ const BLACK_KEY_DEFS = [
     { keyId:'As5', sharp:'A#5', flat:'B♭5', whiteLeft:12 },
 ];
 
-const WHITE_W = 38;                          // white key width px
-const BLACK_W = 22;                          // black key width px
+const WHITE_W = 38;
+const BLACK_W = 22;
 const STAFF_Y = [55, 75, 95, 115, 135];
 const NS = 'http://www.w3.org/2000/svg';
 
-let cur = null, sc = 0, tot = 0, ok = true, combo = 0;
+/* ── App state ─────────────────────────────────────────────────── */
+let cur = null, sc = 0, tot = 0, ok = true, combo = 0, maxCombo = 0;
+let totalQ = 10;
+let settingSec = 5;
+let quizStartTime = 0;
+let wrongMap = {};
 
-/* ── Timer ─────────────────────────────────────────────────── */
+/* ── Timer ─────────────────────────────────────────────────────── */
 const TICK_MS = 50;
-let settingSec  = 5;   // chosen in settings (applies next question)
-let timerSec    = 5;   // active for current question
+let timerSec = 5;
 let timerInterval = null;
 let timeLeft = 5;
 
@@ -358,10 +518,7 @@ function startTimer() {
     timerSec = settingSec;
 
     const wrap = document.querySelector('.timer-wrap');
-    if (timerSec === 0) {
-        wrap.style.visibility = 'hidden';
-        return;
-    }
+    if (timerSec === 0) { wrap.style.visibility = 'hidden'; return; }
 
     wrap.style.visibility = 'visible';
     timeLeft = timerSec;
@@ -393,9 +550,10 @@ function timeout() {
     const fb = document.getElementById('fb');
     fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`;
     fb.className = 'feedback wrong';
+    wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1;
     combo = 0;
     renderCombo();
-    setTimeout(next, 1500);
+    afterAnswer();
 }
 
 function renderCombo() {
@@ -405,7 +563,7 @@ function renderCombo() {
     el.className = 'combo show ' + (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2');
 }
 
-/* ── SVG helpers ───────────────────────────────────────────── */
+/* ── SVG helpers ───────────────────────────────────────────────── */
 
 function mk(tag, attrs) {
     const e = document.createElementNS(NS, tag);
@@ -415,12 +573,10 @@ function mk(tag, attrs) {
 
 function initStaff() {
     const svg = document.getElementById('staff-svg');
-
     STAFF_Y.forEach(y => svg.appendChild(mk('line', {
         x1: 22, y1: y, x2: 468, y2: y,
         stroke: '#333', 'stroke-width': 1.5
     })));
-
     svg.appendChild(mk('line', { x1:22,  y1:55, x2:22,  y2:135, stroke:'#333', 'stroke-width':2 }));
     svg.appendChild(mk('line', { x1:468, y1:55, x2:468, y2:135, stroke:'#333', 'stroke-width':2 }));
 
@@ -436,33 +592,24 @@ function initStaff() {
 
 function drawNote(note) {
     document.querySelectorAll('.ngrp').forEach(e => e.remove());
-
     const svg = document.getElementById('staff-svg');
     const g = document.createElementNS(NS, 'g');
     g.setAttribute('class', 'ngrp');
 
     const x = 280, y = note.y;
 
-    // Ledger line below staff (C4 and enharmonics at y=155)
-    if (y >= 155) {
-        g.appendChild(mk('line', {
-            x1: x-19, y1: 155, x2: x+19, y2: 155,
-            stroke: '#333', 'stroke-width': 1.5
-        }));
-    }
-    // Ledger line above staff (A5 and higher: y≤35)
-    if (y <= 35) {
-        g.appendChild(mk('line', {
-            x1: x-19, y1: 35, x2: x+19, y2: 35,
-            stroke: '#333', 'stroke-width': 1.5
-        }));
-    }
+    if (y >= 155) g.appendChild(mk('line', {
+        x1: x-19, y1: 155, x2: x+19, y2: 155,
+        stroke: '#333', 'stroke-width': 1.5
+    }));
+    if (y <= 35) g.appendChild(mk('line', {
+        x1: x-19, y1: 35, x2: x+19, y2: 35,
+        stroke: '#333', 'stroke-width': 1.5
+    }));
 
-    // Accidental (♯ or ♭) drawn to the left of the note head
     if (note.acc) {
         const sym = note.acc === 'sharp' ? '♯' : '♭';
-        // flat hangs lower visually, so adjust baseline accordingly
-        const ay = note.acc === 'flat' ? y + 7 : y + 5;
+        const ay  = note.acc === 'flat'  ? y + 7 : y + 5;
         const acc = document.createElementNS(NS, 'text');
         acc.setAttribute('x', String(x - 19));
         acc.setAttribute('y', String(ay));
@@ -474,14 +621,12 @@ function drawNote(note) {
         g.appendChild(acc);
     }
 
-    // Note head (filled, slightly tilted ellipse)
     g.appendChild(mk('ellipse', {
         cx: x, cy: y, rx: 9, ry: 6.5,
         fill: '#111',
         transform: `rotate(-15,${x},${y})`
     }));
 
-    // Stem: up (right side) for notes on/below B4 (y≥95), down (left) above
     const up = y >= 95;
     g.appendChild(mk('line', {
         x1: up ? x+8.5 : x-8.5,
@@ -494,13 +639,12 @@ function drawNote(note) {
     svg.appendChild(g);
 }
 
-/* ── Piano builder ─────────────────────────────────────────── */
+/* ── Piano builder ─────────────────────────────────────────────── */
 
 function buildPiano() {
     const piano = document.getElementById('piano');
     piano.style.width = (WHITE_NOTES.length * WHITE_W) + 'px';
 
-    // White keys
     WHITE_NOTES.forEach((n, i) => {
         const k = document.createElement('div');
         k.className = 'key white';
@@ -513,22 +657,38 @@ function buildPiano() {
         piano.appendChild(k);
     });
 
-    // Black keys (positioned over the gap between adjacent white keys)
     BLACK_KEY_DEFS.forEach(bk => {
         const k = document.createElement('div');
         k.className = 'key black';
-        // Center black key over the boundary between whiteLeft and whiteLeft+1
         k.style.left = (bk.whiteLeft * WHITE_W + WHITE_W - Math.floor(BLACK_W / 2)) + 'px';
         k.dataset.keyid = bk.keyId;
-        k.innerHTML =
-            `<span class="note-id">${bk.sharp}</span>` +
-            `<span class="note-id">${bk.flat}</span>`;
+        k.innerHTML = '';
         k.addEventListener('click', () => answer(bk.keyId, k));
         piano.appendChild(k);
     });
 }
 
-/* ── Quiz logic ────────────────────────────────────────────── */
+/* ── Screen management ─────────────────────────────────────────── */
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+/* ── Quiz logic ────────────────────────────────────────────────── */
+
+function startQuiz() {
+    sc = 0; tot = 0; ok = true; combo = 0; maxCombo = 0;
+    wrongMap = {};
+    document.getElementById('sc').textContent  = 0;
+    document.getElementById('tot').textContent = 0;
+    document.getElementById('prog-tot').textContent = totalQ;
+    document.getElementById('prog-cur').textContent = 0;
+    renderCombo();
+    showScreen('screen-quiz');
+    quizStartTime = Date.now();
+    next();
+}
 
 function next() {
     ok = true;
@@ -552,47 +712,84 @@ function answer(keyId, keyEl) {
         document.getElementById('sc').textContent = ++sc;
         keyEl.classList.add('correct');
         combo++;
+        if (combo > maxCombo) maxCombo = combo;
         fb.textContent = '✓ 정답입니다!';
         fb.className = 'feedback correct';
     } else {
         keyEl.classList.add('wrong');
         document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
+        wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1;
         combo = 0;
         fb.textContent = `✗ 오답! 정답은 ${cur.id}`;
         fb.className = 'feedback wrong';
     }
     renderCombo();
-
-    setTimeout(next, 1500);
+    afterAnswer();
 }
 
-/* ── Settings dropdown ─────────────────────────────────────── */
-const settingsBtn      = document.getElementById('settings-btn');
-const settingsDropdown = document.getElementById('settings-dropdown');
-const curLabel         = document.getElementById('cur-label');
+function afterAnswer() {
+    document.getElementById('prog-cur').textContent = tot;
+    if (tot >= totalQ) {
+        setTimeout(showResult, 1500);
+    } else {
+        setTimeout(next, 1500);
+    }
+}
 
-settingsBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    settingsDropdown.classList.toggle('open');
-});
+/* ── Result Screen ─────────────────────────────────────────────── */
 
-document.addEventListener('click', () => settingsDropdown.classList.remove('open'));
+function showResult() {
+    stopTimer();
+    const elapsed = Math.round((Date.now() - quizStartTime) / 1000);
+    const rate    = Math.round(sc / totalQ * 100);
 
-settingsDropdown.querySelectorAll('.dropdown-item').forEach(item => {
-    item.addEventListener('click', e => {
-        e.stopPropagation();
-        const sec = parseInt(item.dataset.sec, 10);
-        settingSec = sec;
-        curLabel.textContent = sec === 0 ? 'OFF' : sec + '초';
-        settingsDropdown.querySelectorAll('.dropdown-item')
-            .forEach(i => i.classList.toggle('active', i === item));
-        settingsDropdown.classList.remove('open');
+    document.getElementById('res-sc').textContent    = sc;
+    document.getElementById('res-tot').textContent   = totalQ;
+    document.getElementById('res-rate').textContent  = rate + '%';
+    document.getElementById('res-combo').textContent = maxCombo;
+    document.getElementById('res-time').textContent  = elapsed + '초';
+
+    const list   = document.getElementById('wrong-list');
+    list.innerHTML = '';
+    const wrongs = Object.entries(wrongMap).sort((a, b) => b[1] - a[1]);
+
+    if (wrongs.length === 0) {
+        list.innerHTML = '<div class="no-wrong">🎉 오답이 없습니다!</div>';
+    } else {
+        wrongs.forEach(([noteId, count]) => {
+            const item = document.createElement('div');
+            item.className = 'wrong-item';
+            item.innerHTML = `<span class="note-name">${noteId}</span>
+                              <span class="wrong-count">${count}회 틀림</span>`;
+            list.appendChild(item);
+        });
+    }
+
+    showScreen('screen-result');
+}
+
+/* ── Option button groups ──────────────────────────────────────── */
+
+function setupOptBtns(groupId, onChange) {
+    const group = document.getElementById(groupId);
+    group.querySelectorAll('.opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            group.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            onChange(btn.dataset);
+        });
     });
-});
+}
 
+setupOptBtns('q-btns', ({ q })   => { totalQ    = parseInt(q,   10); });
+setupOptBtns('t-btns', ({ sec }) => { settingSec = parseInt(sec, 10); });
+
+document.getElementById('start-btn').addEventListener('click', startQuiz);
+document.getElementById('restart-btn').addEventListener('click', () => showScreen('screen-start'));
+
+/* ── Init ──────────────────────────────────────────────────────── */
 initStaff();
 buildPiano();
-next();
 </script>
 </body>
 </html>
