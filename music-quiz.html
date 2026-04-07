@@ -50,6 +50,22 @@
         }
         .ngrp { animation: noteIn 0.22s ease-out; }
 
+        /* Timer bar */
+        .timer-wrap {
+            width: 490px;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.1s linear, background-color 0.4s ease;
+            background: #48bb78;
+        }
+        .timer-bar.danger { background: #f56565; }
+
         .feedback {
             font-size: 1.05rem;
             font-weight: 600;
@@ -161,6 +177,8 @@
     점수: <b id="sc">0</b> / <b id="tot">0</b>
 </div>
 
+<div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+
 <div class="card">
     <!--
         Staff lines (y): F5=55, D5=75, B4=95, G4=115, E4=135
@@ -245,6 +263,46 @@ const STAFF_Y = [55, 75, 95, 115, 135];
 const NS = 'http://www.w3.org/2000/svg';
 
 let cur = null, sc = 0, tot = 0, ok = true;
+
+/* ── Timer ─────────────────────────────────────────────────── */
+const TIMER_SEC = 5;
+const TICK_MS   = 50;
+let timerInterval = null;
+let timeLeft = TIMER_SEC;
+
+function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = TIMER_SEC;
+    renderTimer();
+    timerInterval = setInterval(() => {
+        timeLeft = Math.max(0, timeLeft - TICK_MS / 1000);
+        renderTimer();
+        if (timeLeft === 0) timeout();
+    }, TICK_MS);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+}
+
+function renderTimer() {
+    const bar = document.getElementById('timer-bar');
+    bar.style.width = (timeLeft / TIMER_SEC * 100) + '%';
+    bar.classList.toggle('danger', timeLeft <= 2);
+}
+
+function timeout() {
+    if (!ok) return;
+    ok = false;
+    stopTimer();
+    document.getElementById('tot').textContent = ++tot;
+    document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
+    const fb = document.getElementById('fb');
+    fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`;
+    fb.className = 'feedback wrong';
+    setTimeout(next, 1500);
+}
 
 /* ── SVG helpers ───────────────────────────────────────────── */
 
@@ -379,11 +437,13 @@ function next() {
     document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
     cur = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
     drawNote(cur);
+    startTimer();
 }
 
 function answer(keyId, keyEl) {
     if (!ok) return;
     ok = false;
+    stopTimer();
     document.getElementById('tot').textContent = ++tot;
 
     const fb = document.getElementById('fb');
