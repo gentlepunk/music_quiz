@@ -1,46 +1,66 @@
 <!DOCTYPE html>
+<!-- HTML 파일임을 선언. 브라우저에게 "이건 HTML5 문서야"라고 알려주는 것 -->
 <html lang="ko">
 <head>
+    <!-- head 섹션: 실제 화면에 보이지 않는 메타정보와 스타일 정의 영역 -->
     <meta charset="UTF-8">
+    <!-- UTF-8 인코딩 선언. Python의 # -*- coding: utf-8 -*- 와 같은 역할 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 모바일 화면 크기에 맞게 조정하는 설정 -->
     <title>음표 맞추기 퀴즈</title>
+    <!-- 브라우저 탭에 표시되는 제목 -->
+
     <style>
+        /*
+         * CSS(스타일시트): HTML 요소들의 시각적 표현을 정의하는 언어
+         * Python에서 클래스 속성처럼, 각 HTML 요소가 어떻게 보일지 정한다
+         * 형식: 선택자(대상) { 속성: 값; }
+         */
+
+        /* 모든 요소(*): 기본 여백/패딩 제거, 박스 크기 계산 방식 통일 */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        /* body: 페이지 전체 배경 및 레이아웃 설정 */
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #eef2f7;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 20px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; /* 기본 글꼴 */
+            background: #eef2f7;    /* 연한 파란빛 회색 배경 */
+            min-height: 100vh;      /* 최소 높이를 화면 전체로 */
+            display: flex;          /* flexbox: 자식 요소를 유연하게 배치하는 레이아웃 */
+            flex-direction: column; /* 자식 요소를 세로로 쌓음 */
+            align-items: center;    /* 가로 방향 가운데 정렬 */
+            justify-content: center;/* 세로 방향 가운데 정렬 */
+            gap: 20px;              /* 자식 요소 사이 간격 20px */
+            padding: 20px;          /* 내부 여백 20px */
         }
 
+        /* h1: 제목 텍스트 스타일 */
         h1 {
-            font-size: 1.65rem;
-            font-weight: 700;
-            color: #2d3748;
+            font-size: 1.65rem;     /* rem: 기본 글꼴 크기의 배수 단위 */
+            font-weight: 700;       /* 굵기 (700 = 굵게) */
+            color: #2d3748;         /* 진한 회색 */
         }
 
-        /* ── Screen management ─────────────────────────── */
+        /* ── 화면(Screen) 관리 ────────────────────────────────── */
+        /*
+         * 이 앱은 화면이 3개: 시작화면 / 퀴즈화면 / 결과화면
+         * Python의 if/elif 분기처럼, 한 번에 하나만 보임
+         * display:none = 숨기기, display:flex = 보이기
+         */
         .screen { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
-        .screen.active { display: flex; }
+        .screen.active { display: flex; } /* 'active' 클래스가 붙으면 표시 */
 
-        /* ── Shared: Score ─────────────────────────────── */
+        /* ── 점수 표시 배지 ───────────────────────────────────── */
         .score {
             background: #fff;
-            border-radius: 999px;
-            padding: 7px 28px;
+            border-radius: 999px;       /* 완전한 타원형 모양 */
+            padding: 7px 28px;          /* 위아래 7px, 좌우 28px 여백 */
             font-size: 0.95rem;
             color: #718096;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
         }
-        .score b { color: #3182ce; font-size: 1.1rem; }
+        .score b { color: #3182ce; font-size: 1.1rem; } /* b 태그(굵은 글자): 파란색으로 */
 
-        /* ── Shared: Combo ─────────────────────────────── */
+        /* ── 콤보 표시 배지 ───────────────────────────────────── */
         .combo {
             background: #fff;
             border-radius: 999px;
@@ -48,105 +68,115 @@
             font-size: 0.95rem;
             font-weight: 600;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-            display: none;
+            display: none;          /* 기본적으로 숨겨져 있음 */
         }
-        .combo.show { display: block; }
-        .combo.c2  { color: #2b6cb0; }
-        .combo.c5  { color: #c05621; }
-        .combo.c10 { color: #c53030; font-weight: 800; }
+        .combo.show { display: block; }     /* 'show' 클래스 추가 시 표시 */
+        .combo.c2  { color: #2b6cb0; }      /* 2콤보 이상: 파란색 */
+        .combo.c5  { color: #c05621; }      /* 5콤보 이상: 주황색 */
+        .combo.c10 { color: #c53030; font-weight: 800; } /* 10콤보 이상: 빨간색 + 더 굵게 */
 
-        /* ── Shared: Card ──────────────────────────────── */
+        /* ── 카드(흰 박스) 공통 스타일 ───────────────────────── */
         .card {
             background: #fff;
-            border-radius: 18px;
+            border-radius: 18px;    /* 모서리를 둥글게 */
             padding: 22px 28px 18px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
+        /* SVG(악보 그래픽): 블록 요소로 표시 */
         #staff-svg { display: block; }
 
+        /*
+         * CSS 애니메이션: 음표가 위에서 내려오며 나타나는 효과
+         * Python에서 time.sleep()으로 구현할 것을 CSS가 자동으로 처리
+         * @keyframes: 애니메이션의 시작(from)과 끝(to) 상태를 정의
+         */
         @keyframes noteIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(-10px); } /* 투명하고 10px 위에서 시작 */
+            to   { opacity: 1; transform: translateY(0); }     /* 불투명하고 제자리로 이동 */
         }
-        .ngrp { animation: noteIn 0.22s ease-out; }
+        .ngrp { animation: noteIn 0.22s ease-out; } /* ngrp 클래스에 0.22초 애니메이션 적용 */
 
-        /* ── Timer bar ─────────────────────────────────── */
+        /* ── 타이머 바 ────────────────────────────────────────── */
         .timer-wrap {
             width: 490px;
             height: 10px;
-            background: #e2e8f0;
+            background: #e2e8f0;    /* 회색 배경 (빈 부분) */
             border-radius: 99px;
-            overflow: hidden;
+            overflow: hidden;       /* 자식 요소가 넘치면 잘라냄 */
         }
         .timer-bar {
             height: 100%;
             border-radius: 99px;
+            /* transition: CSS 속성이 변할 때 부드럽게 전환 (Python의 선형보간과 유사) */
             transition: width 0.1s linear, background-color 0.4s ease;
-            background: #48bb78;
+            background: #48bb78;    /* 초록색 (시간 여유 있음) */
         }
-        .timer-bar.danger { background: #f56565; }
+        .timer-bar.danger { background: #f56565; } /* 'danger' 클래스 추가 시 빨간색으로 변경 */
 
-        /* ── Feedback ──────────────────────────────────── */
+        /* ── 정답/오답 피드백 텍스트 ─────────────────────────── */
         .feedback {
             font-size: 1.05rem;
             font-weight: 600;
-            min-height: 34px;
+            min-height: 34px;       /* 텍스트 없어도 자리 차지 (레이아웃 흔들림 방지) */
             line-height: 34px;
             padding: 0 20px;
             border-radius: 8px;
             text-align: center;
-            transition: background 0.2s, color 0.2s;
+            transition: background 0.2s, color 0.2s; /* 색상 변화를 부드럽게 */
         }
-        .feedback.correct { color: #22543d; background: #c6f6d5; }
-        .feedback.wrong   { color: #742a2a; background: #fed7d7; }
+        .feedback.correct { color: #22543d; background: #c6f6d5; } /* 정답: 초록 배경 */
+        .feedback.wrong   { color: #742a2a; background: #fed7d7; } /* 오답: 빨간 배경 */
 
-        /* ── Piano ─────────────────────────────────────── */
+        /* ── 피아노 건반 컨테이너 ────────────────────────────── */
         .piano {
-            position: relative;
+            position: relative;     /* 자식 요소를 절대 좌표로 배치하기 위한 기준점 */
             height: 145px;
-            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.22));
+            filter: drop-shadow(0 6px 16px rgba(0,0,0,0.22)); /* 전체 피아노에 그림자 */
         }
 
+        /* 건반 공통 스타일 */
         .key {
-            position: absolute;
+            position: absolute;     /* 피아노 컨테이너 기준으로 절대 위치 지정 */
             top: 0;
-            border-radius: 0 0 8px 8px;
-            cursor: pointer;
+            border-radius: 0 0 8px 8px; /* 아래쪽 모서리만 둥글게 (건반 모양) */
+            cursor: pointer;        /* 마우스 포인터를 손가락 모양으로 */
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: flex-end; /* 텍스트를 건반 아래쪽에 배치 */
             transition: background 0.07s, transform 0.07s, border-color 0.15s;
-            user-select: none;
-            -webkit-user-select: none;
+            user-select: none;      /* 텍스트 드래그 선택 방지 */
+            -webkit-user-select: none; /* Safari 호환성 */
         }
 
+        /* 흰 건반 스타일 */
         .key.white {
             width: 38px;
             height: 145px;
-            background: linear-gradient(to bottom, #f5f5f5, #ffffff);
+            background: linear-gradient(to bottom, #f5f5f5, #ffffff); /* 위→아래 그라디언트 */
             border: 1px solid #c8c8c8;
             border-bottom-width: 4px;
-            z-index: 1;
+            z-index: 1;             /* z-index: 겹칠 때 쌓이는 순서 (파이썬 리스트 인덱스와 개념 유사) */
             padding-bottom: 8px;
             gap: 2px;
         }
-        .key.white:hover { background: linear-gradient(to bottom, #dbeafe, #eff6ff); }
-        .key.white:active {
-            transform: translateY(2px);
+        .key.white:hover { background: linear-gradient(to bottom, #dbeafe, #eff6ff); } /* 마우스 올리면 연파랑 */
+        .key.white:active {             /* 마우스 클릭 중 상태 */
+            transform: translateY(2px); /* 2px 아래로 내려가는 효과 (건반 누르는 느낌) */
             background: linear-gradient(to bottom, #bfdbfe, #dbeafe);
         }
         .key.white .solfege { font-size: 0.72rem; font-weight: 600; color: #718096; }
         .key.white .note-id { font-size: 0.82rem; color: #2d3748; font-weight: 400; }
 
+        /* 검은 건반 스타일 */
         .key.black {
             width: 22px;
-            height: 88px;
+            height: 88px;           /* 흰 건반보다 짧음 */
             background: linear-gradient(to bottom, #1a1a1a, #3a3a3a);
             border: 1px solid #111;
             border-bottom-width: 3px;
-            z-index: 2;
+            z-index: 2;             /* 흰 건반(z-index:1)보다 위에 렌더링 */
             padding-bottom: 5px;
             gap: 1px;
         }
@@ -156,21 +186,24 @@
             background: linear-gradient(to bottom, #3a4a7a, #4a5a8a);
         }
         .key.black .note-id {
-            font-size: 0.44rem;
+            font-size: 0.44rem;     /* 검은 건반은 좁아서 글씨를 매우 작게 */
             color: #ccc;
             font-weight: 500;
             line-height: 1.4;
             text-align: center;
         }
 
+        /* 정답 건반: 초록색으로 표시 (!important: 다른 스타일보다 우선 적용) */
         .key.correct {
             background: linear-gradient(to bottom, #9ae6b4, #c6f6d5) !important;
             border-color: #38a169 !important;
         }
+        /* 오답 건반: 빨간색으로 표시 */
         .key.wrong {
             background: linear-gradient(to bottom, #fc8181, #fed7d7) !important;
             border-color: #e53e3e !important;
         }
+        /* 정답/오답 건반의 텍스트 색상도 함께 변경 */
         .key.white.correct .solfege,
         .key.white.correct .note-id { color: #22543d; }
         .key.white.wrong   .solfege,
@@ -178,7 +211,7 @@
         .key.black.correct .note-id { color: #22543d; }
         .key.black.wrong   .note-id { color: #742a2a; }
 
-        /* ── Start Screen ───────────────────────────────── */
+        /* ── 시작 화면 카드 ───────────────────────────────────── */
         .start-card {
             background: #fff;
             border-radius: 20px;
@@ -192,18 +225,20 @@
 
         .option-group { display: flex; flex-direction: column; gap: 10px; }
 
+        /* 옵션 그룹 라벨 (UPPERCASE 소제목) */
         .option-group-label {
             font-size: 0.82rem;
             font-weight: 700;
             color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+            text-transform: uppercase;  /* 텍스트를 대문자로 변환 */
+            letter-spacing: 0.06em;     /* 글자 간격 */
         }
 
         .option-btns { display: flex; gap: 8px; }
 
+        /* 옵션 버튼 (문제 수, 시간 선택) */
         .opt-btn {
-            flex: 1;
+            flex: 1;                /* 남은 공간을 균등하게 나눠 가짐 */
             padding: 10px 0;
             border-radius: 10px;
             border: 2px solid #e2e8f0;
@@ -215,13 +250,14 @@
             transition: border-color 0.15s, background 0.15s, color 0.15s;
         }
         .opt-btn:hover { background: #ebf4ff; border-color: #90cdf4; }
-        .opt-btn.active { background: #ebf4ff; border-color: #3182ce; color: #2b6cb0; }
+        .opt-btn.active { background: #ebf4ff; border-color: #3182ce; color: #2b6cb0; } /* 선택된 버튼 */
 
+        /* 시작하기 버튼 */
         .start-btn {
             padding: 14px 0;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, #3182ce, #2b6cb0);
+            background: linear-gradient(135deg, #3182ce, #2b6cb0); /* 대각선 그라디언트 */
             color: #fff;
             font-size: 1.1rem;
             font-weight: 700;
@@ -229,12 +265,13 @@
             box-shadow: 0 4px 12px rgba(49,130,206,0.35);
             transition: opacity 0.15s, transform 0.1s;
         }
-        .start-btn:hover  { opacity: 0.92; transform: translateY(-1px); }
+        .start-btn:hover  { opacity: 0.92; transform: translateY(-1px); } /* 살짝 올라오는 효과 */
         .start-btn:active { transform: translateY(0); }
 
-        /* ── Quiz Screen ────────────────────────────────── */
+        /* ── 퀴즈 화면 상단 행 ────────────────────────────────── */
         .quiz-top-row { display: flex; gap: 12px; align-items: center; }
 
+        /* 진행 상황 표시 (현재문제/총문제) */
         .progress {
             background: #fff;
             border-radius: 999px;
@@ -244,9 +281,9 @@
             color: #718096;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1);
         }
-        .progress .cur { color: #3182ce; font-size: 1.05rem; }
+        .progress .cur { color: #3182ce; font-size: 1.05rem; } /* 현재 문제 번호: 파란색 */
 
-        /* ── Result Screen ──────────────────────────────── */
+        /* ── 결과 화면 카드 ───────────────────────────────────── */
         .result-card {
             background: #fff;
             border-radius: 20px;
@@ -258,6 +295,7 @@
             width: 420px;
         }
 
+        /* 큰 점수 숫자 */
         .result-score-big {
             text-align: center;
             padding: 8px 0;
@@ -268,7 +306,7 @@
             color: #2d3748;
             line-height: 1;
         }
-        .result-score-big .big-num span { color: #3182ce; }
+        .result-score-big .big-num span { color: #3182ce; } /* 점수 숫자: 파란색 */
         .result-score-big .sub {
             font-size: 0.95rem;
             font-weight: 600;
@@ -276,9 +314,10 @@
             margin-top: 6px;
         }
 
+        /* 결과 통계 행 (정답률, 최고 콤보, 총 시간) */
         .result-meta {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-around; /* 균등 간격으로 배치 */
             background: #f7fafc;
             border-radius: 12px;
             padding: 14px 0;
@@ -293,31 +332,34 @@
         }
         .result-meta-item .value { font-size: 1.2rem; font-weight: 700; color: #4a5568; }
 
+        /* 틀린 음 통계 섹션 제목 */
         .wrong-section-title {
             font-size: 0.82rem;
             font-weight: 700;
             color: #a0aec0;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0; /* 위쪽 구분선 */
             padding-top: 16px;
         }
 
+        /* 틀린 음 목록 컨테이너 */
         .wrong-list {
             display: flex;
             flex-direction: column;
             gap: 6px;
             max-height: 190px;
-            overflow-y: auto;
+            overflow-y: auto;   /* 내용이 넘치면 세로 스크롤 표시 */
         }
 
+        /* 틀린 음 개별 항목 */
         .wrong-item {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between; /* 양쪽 끝으로 배치 */
             align-items: center;
             padding: 8px 14px;
             border-radius: 8px;
-            background: #fff5f5;
+            background: #fff5f5;            /* 연한 빨강 배경 */
         }
         .wrong-item .note-name { font-weight: 700; color: #c53030; font-size: 1rem; }
         .wrong-item .wrong-count {
@@ -329,6 +371,7 @@
             font-weight: 600;
         }
 
+        /* 오답 없음 메시지 */
         .no-wrong {
             text-align: center;
             color: #38a169;
@@ -337,6 +380,20 @@
             padding: 12px 0;
         }
 
+        /* ── 조성 안내 힌트 배지 ─────────────────────────────── */
+        .key-hint {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 6px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #2c5282;
+            display: none;          /* 다장조(초급)일 때는 숨김 */
+        }
+        .key-hint.show { display: block; }
+
+        /* 처음으로 돌아가기 버튼 (시작하기 버튼과 동일한 스타일) */
         .restart-btn {
             padding: 14px 0;
             border-radius: 12px;
@@ -355,48 +412,75 @@
 </head>
 <body>
 
-<!-- ══ Start Screen ══════════════════════════════════════════════ -->
+<!-- ══ 시작 화면 ══════════════════════════════════════════════════ -->
+<!-- HTML 구조: Python 딕셔너리처럼 키-값 쌍으로 이루어진 태그와 속성 -->
+<!-- id="screen-start": JavaScript에서 이 요소를 찾을 때 쓰는 고유 식별자 -->
+<!-- class="screen active": CSS 스타일 적용 대상. 'active'가 붙어있어 처음에 보임 -->
 <div id="screen-start" class="screen active">
     <h1>🎵 음표 맞추기</h1>
     <div class="start-card">
+        <!-- 문제 수 선택 그룹 -->
         <div class="option-group">
             <div class="option-group-label">문제 수</div>
             <div class="option-btns" id="q-btns">
+                <!-- data-q: JavaScript에서 읽는 커스텀 데이터 속성 (Python 딕셔너리의 키처럼) -->
                 <button class="opt-btn active" data-q="10">10문제</button>
                 <button class="opt-btn"        data-q="20">20문제</button>
                 <button class="opt-btn"        data-q="30">30문제</button>
             </div>
         </div>
+        <!-- 제한 시간 선택 그룹 -->
         <div class="option-group">
             <div class="option-group-label">제한 시간</div>
             <div class="option-btns" id="t-btns">
+                <!-- data-sec="0"은 타이머 OFF를 의미 -->
                 <button class="opt-btn active" data-sec="5">5초</button>
                 <button class="opt-btn"        data-sec="7">7초</button>
                 <button class="opt-btn"        data-sec="10">10초</button>
                 <button class="opt-btn"        data-sec="0">OFF</button>
             </div>
         </div>
+        <!-- 난이도 선택 그룹 -->
+        <div class="option-group">
+            <div class="option-group-label">난이도</div>
+            <div class="option-btns" id="d-btns">
+                <!-- data-diff: 난이도 식별자 (JavaScript에서 KEY_SIGNATURES 키로 사용) -->
+                <button class="opt-btn active" data-diff="beginner">초급</button>
+                <button class="opt-btn"        data-diff="intermediate">중급</button>
+                <button class="opt-btn"        data-diff="advanced">고급</button>
+            </div>
+        </div>
         <button class="start-btn" id="start-btn">시작하기 →</button>
     </div>
 </div>
 
-<!-- ══ Quiz Screen ═══════════════════════════════════════════════ -->
+<!-- ══ 퀴즈 화면 ═════════════════════════════════════════════════ -->
+<!-- 처음엔 'active' 클래스가 없어서 숨겨져 있음 -->
 <div id="screen-quiz" class="screen">
     <h1>🎵 음표 맞추기</h1>
 
+    <!-- 상단 정보 행: 점수 + 진행 상황 -->
     <div class="quiz-top-row">
+        <!-- id="sc": 정답 수, id="tot": 총 시도 수 -->
         <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
+        <!-- id="prog-cur": 현재 문제 번호, id="prog-tot": 전체 문제 수 -->
         <div class="progress"><span class="cur" id="prog-cur">0</span> / <span id="prog-tot">10</span></div>
     </div>
 
+    <!-- 콤보 표시 (2연속 이상 정답 시 나타남) -->
     <div class="combo" id="combo"></div>
 
+    <!-- 타이머 바: 내부 div의 width를 줄여서 시간 경과를 표시 -->
     <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
 
+    <!-- 악보 카드 -->
     <div class="card">
         <!--
-            Staff lines (y): F5=55, D5=75, B4=95, G4=115, E4=135
-            White note y positions (10px/step):
+            SVG(Scalable Vector Graphics): 코드로 그리는 벡터 그래픽
+            Python의 turtle 모듈처럼 좌표계로 도형을 그림
+            viewBox="0 0 490 220": 좌표계 (x:0~490, y:0~220)
+            오선 y좌표: F5=55, D5=75, B4=95, G4=115, E4=135
+            음표 y좌표 (10px 간격):
               B5=25  A5=35  G5=45  F5=55  E5=65  D5=75  C5=85
               B4=95  A4=105 G4=115 F4=125 E4=135 D4=145 C4=155
         -->
@@ -404,19 +488,26 @@
              xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
 
+    <!-- 조성 안내 힌트: 현재 조성과 주의할 음 표시 -->
+    <div class="key-hint" id="key-hint"></div>
+
+    <!-- 정답/오답 피드백 메시지 표시 영역 -->
     <div class="feedback" id="fb"></div>
 
+    <!-- 피아노 건반 영역 (JavaScript로 동적으로 생성됨) -->
     <div class="piano" id="piano"></div>
 </div>
 
-<!-- ══ Result Screen ═════════════════════════════════════════════ -->
+<!-- ══ 결과 화면 ════════════════════════════════════════════════ -->
 <div id="screen-result" class="screen">
     <h1>🎵 결과</h1>
     <div class="result-card">
+        <!-- 큰 점수 표시 -->
         <div class="result-score-big">
             <div class="big-num"><span id="res-sc">0</span> / <span id="res-tot">10</span></div>
             <div class="sub">정답</div>
         </div>
+        <!-- 통계 3개: 정답률, 최고 콤보, 총 시간 -->
         <div class="result-meta">
             <div class="result-meta-item">
                 <span class="label">정답률</span>
@@ -432,14 +523,32 @@
             </div>
         </div>
         <div class="wrong-section-title">틀린 음 통계</div>
+        <!-- 틀린 음 목록 (JavaScript로 동적으로 채워짐) -->
         <div class="wrong-list" id="wrong-list"></div>
         <button class="restart-btn" id="restart-btn">처음으로 돌아가기</button>
     </div>
 </div>
 
 <script>
-/* ── Note data ─────────────────────────────────────────────────── */
+/*
+ * JavaScript 섹션: 실제 앱 로직
+ * Python과 매우 유사한 문법이지만 차이점:
+ *   - 변수 선언: let(재할당 가능), const(상수) 사용
+ *   - 함수: function 키워드 또는 화살표 함수 () => {}
+ *   - 이벤트 기반: 버튼 클릭 등 사용자 동작에 반응
+ */
 
+/* ── 음표 데이터 ─────────────────────────────────────────────── */
+
+/*
+ * WHITE_NOTES: 흰 건반 음표 데이터 (Python의 딕셔너리 리스트와 동일한 구조)
+ * 각 항목:
+ *   id: 음 이름 (국제 표준 표기, 예: C4 = 가온 다)
+ *   label: 한국 음이름 (다, 라, 마, 바, 사, 가, 나)
+ *   y: SVG 좌표계에서 음표 머리가 그려지는 y좌표
+ *   acc: accidental (임시표). 흰 건반은 null
+ *   keyId: 피아노 건반과 연결하는 키 (같은 keyId끼리 같은 건반)
+ */
 const WHITE_NOTES = [
     { id:'C4', label:'다', y:155, acc:null, keyId:'C4' },
     { id:'D4', label:'라', y:145, acc:null, keyId:'D4' },
@@ -457,6 +566,13 @@ const WHITE_NOTES = [
     { id:'B5', label:'나', y: 25, acc:null, keyId:'B5' },
 ];
 
+/*
+ * BLACK_NOTES: 검은 건반 음표 데이터
+ * acc: 'sharp'(♯, 반음 올림) 또는 'flat'(♭, 반음 내림)
+ * keyId: 같은 건반의 샵과 플랫은 동일한 keyId를 공유
+ *   예) C#4와 D♭4는 같은 검은 건반이므로 keyId='Cs4'로 동일
+ * y값이 흰 건반과 겹치는 이유: 악보에서 같은 줄/칸에 그려지기 때문
+ */
 const BLACK_NOTES = [
     { id:'C#4', y:155, acc:'sharp', keyId:'Cs4' },
     { id:'D♭4', y:145, acc:'flat',  keyId:'Cs4' },
@@ -480,14 +596,65 @@ const BLACK_NOTES = [
     { id:'B♭5', y: 25, acc:'flat',  keyId:'As5' },
 ];
 
+/* 흰 건반 + 검은 건반 전체 목록. Python의 리스트 덧셈: WHITE_NOTES + BLACK_NOTES */
 const ALL_NOTES = [...WHITE_NOTES, ...BLACK_NOTES];
 
+/* ── 조성(Key Signature) 데이터 ─────────────────────────────── */
+/*
+ * 난이도별 사용할 조성 목록. 각 조성 객체:
+ *   id: 조성 식별자
+ *   name: 한국어 조성명
+ *   sharps: 이 조성에서 반음 올려 연주하는 음의 음이름 알파벳 배열 (예: F → F# 으로 연주)
+ *   flats: 이 조성에서 반음 내려 연주하는 음의 음이름 알파벳 배열 (예: B → Bb 으로 연주)
+ *   hint: 퀴즈 화면에 표시할 주의 안내 문구
+ *
+ * 조성에서 샵/플랫 순서는 음악적 관례(5도권 순서)를 따름:
+ *   샵 순서: F → C → G → D → A → E → B
+ *   플랫 순서: B → E → A → D → G → C → F
+ */
+const KEY_SIGNATURES = {
+    beginner: [
+        /* 다장조 (C major): 샵/플랫 없음. 흰 건반만 사용 */
+        { id:'C', name:'다장조', sharps:[], flats:[], hint:'' }
+    ],
+    intermediate: [
+        /* 사장조 (G major): F# 1개 */
+        { id:'G', name:'사장조',  sharps:['F'],     flats:[], hint:'F# 주의' },
+        /* 라장조 (D major): F#, C# 2개 */
+        { id:'D', name:'라장조',  sharps:['F','C'], flats:[], hint:'F#, C# 주의' }
+    ],
+    advanced: [
+        /* 가장조 (A major): F#, C#, G# 3개 */
+        { id:'A',  name:'가장조',    sharps:['F','C','G'],     flats:[],              hint:'F#, C#, G# 주의' },
+        /* 마장조 (E major): F#, C#, G#, D# 4개 */
+        { id:'E',  name:'마장조',    sharps:['F','C','G','D'], flats:[],              hint:'F#, C#, G#, D# 주의' },
+        /* 내림마장조 (Eb major): Bb, Eb, Ab 3개 */
+        { id:'Eb', name:'내림마장조', sharps:[],                flats:['B','E','A'],   hint:'Bb, Eb, Ab 주의' },
+        /* 내림가장조 (Ab major): Bb, Eb, Ab, Db 4개 */
+        { id:'Ab', name:'내림가장조', sharps:[],                flats:['B','E','A','D'], hint:'Bb, Eb, Ab, Db 주의' }
+    ]
+};
+
+/*
+ * SVG에 조표 기호(♯/♭)를 그릴 때 사용하는 y좌표 (오선 위치 기준)
+ * 높은음자리표 관례적 위치:
+ *   샵 순서: F→55(5번선), C→85(3칸), G→47(5번선 위), D→77(4번선)
+ *   플랫 순서: B→95(3번선), E→65(4칸), A→105(2칸), D→77(4번선)
+ */
+const SHARP_Y = { F:55, C:85, G:47, D:77 };
+const FLAT_Y  = { B:95, E:65, A:107, D:77 };
+
+/*
+ * BLACK_KEY_DEFS: 검은 건반의 위치 정보
+ * whiteLeft: 이 검은 건반 바로 왼쪽에 있는 흰 건반의 인덱스 (0부터 시작)
+ * 피아노 레이아웃 계산에 사용
+ */
 const BLACK_KEY_DEFS = [
-    { keyId:'Cs4', sharp:'C#4', flat:'D♭4', whiteLeft: 0 },
-    { keyId:'Ds4', sharp:'D#4', flat:'E♭4', whiteLeft: 1 },
-    { keyId:'Fs4', sharp:'F#4', flat:'G♭4', whiteLeft: 3 },
-    { keyId:'Gs4', sharp:'G#4', flat:'A♭4', whiteLeft: 4 },
-    { keyId:'As4', sharp:'A#4', flat:'B♭4', whiteLeft: 5 },
+    { keyId:'Cs4', sharp:'C#4', flat:'D♭4', whiteLeft: 0 },  /* C4(0번)과 D4(1번) 사이 */
+    { keyId:'Ds4', sharp:'D#4', flat:'E♭4', whiteLeft: 1 },  /* D4(1번)과 E4(2번) 사이 */
+    { keyId:'Fs4', sharp:'F#4', flat:'G♭4', whiteLeft: 3 },  /* F4(3번)과 G4(4번) 사이 */
+    { keyId:'Gs4', sharp:'G#4', flat:'A♭4', whiteLeft: 4 },  /* G4(4번)과 A4(5번) 사이 */
+    { keyId:'As4', sharp:'A#4', flat:'B♭4', whiteLeft: 5 },  /* A4(5번)과 B4(6번) 사이 */
     { keyId:'Cs5', sharp:'C#5', flat:'D♭5', whiteLeft: 7 },
     { keyId:'Ds5', sharp:'D#5', flat:'E♭5', whiteLeft: 8 },
     { keyId:'Fs5', sharp:'F#5', flat:'G♭5', whiteLeft:10 },
@@ -495,229 +662,415 @@ const BLACK_KEY_DEFS = [
     { keyId:'As5', sharp:'A#5', flat:'B♭5', whiteLeft:12 },
 ];
 
-const WHITE_W = 38;
-const BLACK_W = 22;
-const STAFF_Y = [55, 75, 95, 115, 135];
-const NS = 'http://www.w3.org/2000/svg';
+const WHITE_W = 38;     /* 흰 건반 너비 (픽셀) */
+const BLACK_W = 22;     /* 검은 건반 너비 (픽셀) */
+const STAFF_Y = [55, 75, 95, 115, 135]; /* 오선의 y좌표 5개 */
+const NS = 'http://www.w3.org/2000/svg'; /* SVG 네임스페이스 (SVG 요소 생성 시 필요) */
 
-/* ── App state ─────────────────────────────────────────────────── */
-let cur = null, sc = 0, tot = 0, ok = true, combo = 0, maxCombo = 0;
-let totalQ = 10;
-let settingSec = 5;
-let quizStartTime = 0;
-let wrongMap = {};
+/* ── 앱 상태 변수 ────────────────────────────────────────────── */
+/*
+ * Python의 전역 변수와 동일한 개념
+ * let: 재할당 가능한 변수 (Python의 일반 변수)
+ */
+let cur = null;     /* 현재 문제 음표 객체 */
+let sc = 0;         /* 정답 수 (score) */
+let tot = 0;        /* 총 시도 수 */
+let ok = true;      /* 현재 입력 받을 수 있는지 여부 (중복 클릭 방지) */
+let combo = 0;      /* 현재 연속 정답 수 */
+let maxCombo = 0;   /* 최고 연속 정답 수 */
+let totalQ = 10;    /* 총 문제 수 (기본값 10) */
+let settingSec = 5; /* 설정된 제한 시간 (기본값 5초) */
+let quizStartTime = 0; /* 퀴즈 시작 시각 (밀리초 타임스탬프) */
+let wrongMap = {};  /* 틀린 음 통계. Python 딕셔너리처럼 {음이름: 틀린횟수} */
+let settingDifficulty = 'beginner'; /* 선택된 난이도: 'beginner' | 'intermediate' | 'advanced' */
+let currentKeySig = null;           /* 현재 퀴즈에서 사용 중인 조성 객체 */
+let notePool = [];                  /* 현재 조성에서 출제 가능한 음표 목록 */
 
-/* ── Timer ─────────────────────────────────────────────────────── */
-const TICK_MS = 50;
-let timerSec = 5;
-let timerInterval = null;
-let timeLeft = 5;
+/* ── 타이머 ──────────────────────────────────────────────────── */
+const TICK_MS = 50;         /* 타이머 갱신 간격 (50ms = 초당 20번 업데이트) */
+let timerSec = 5;           /* 현재 타이머의 전체 시간 */
+let timerInterval = null;   /* setInterval 반환값 저장 (Python의 스레드 핸들과 유사) */
+let timeLeft = 5;           /* 남은 시간 */
 
+/*
+ * startTimer(): 타이머 시작
+ * setInterval: Python의 threading.Timer와 유사하지만 반복 실행
+ *   setInterval(함수, 간격ms) → 지정 간격마다 함수를 반복 호출
+ */
 function startTimer() {
-    clearInterval(timerInterval);
+    clearInterval(timerInterval); /* 이전 타이머가 있으면 먼저 중지 */
     timerSec = settingSec;
 
-    const wrap = document.querySelector('.timer-wrap');
-    if (timerSec === 0) { wrap.style.visibility = 'hidden'; return; }
+    const wrap = document.querySelector('.timer-wrap'); /* CSS 선택자로 요소 찾기 */
+    if (timerSec === 0) { wrap.style.visibility = 'hidden'; return; } /* OFF면 숨기고 종료 */
 
     wrap.style.visibility = 'visible';
     timeLeft = timerSec;
     renderTimer();
+    /* 50ms마다 아래 함수 실행. 화살표 함수 () => {} 는 Python의 lambda와 유사 */
     timerInterval = setInterval(() => {
-        timeLeft = Math.max(0, timeLeft - TICK_MS / 1000);
+        timeLeft = Math.max(0, timeLeft - TICK_MS / 1000); /* 0 미만으로 내려가지 않게 */
         renderTimer();
-        if (timeLeft === 0) timeout();
+        if (timeLeft === 0) timeout(); /* 시간 다 되면 timeout 처리 */
     }, TICK_MS);
 }
 
+/* stopTimer(): setInterval을 중지 */
 function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
 }
 
+/* renderTimer(): 타이머 바의 너비와 색상을 업데이트 */
 function renderTimer() {
     const bar = document.getElementById('timer-bar');
+    /* 남은 시간 비율(%)로 바의 너비 설정. 예: 3초/5초 = 60% */
     bar.style.width = (timeLeft / timerSec * 100) + '%';
+    /* 2초 이하면 'danger' 클래스 추가 → 빨간색으로 변함 */
     bar.classList.toggle('danger', timeLeft <= 2);
 }
 
+/* timeout(): 시간 초과 처리 */
 function timeout() {
-    if (!ok) return;
+    if (!ok) return; /* 이미 답변 처리된 경우 무시 */
     ok = false;
     stopTimer();
-    document.getElementById('tot').textContent = ++tot;
+    document.getElementById('tot').textContent = ++tot; /* tot 증가 후 화면에 표시 */
+    /* data-keyid 속성이 cur.keyId인 요소에 'correct' 클래스 추가 → 정답 건반 초록색으로 표시 */
     document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
     const fb = document.getElementById('fb');
-    fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`;
+    fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`; /* 템플릿 리터럴: Python f-string과 동일 */
     fb.className = 'feedback wrong';
-    wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1;
+    wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1; /* 없으면 0으로 초기화 후 +1 */
     combo = 0;
     renderCombo();
     afterAnswer();
 }
 
+/*
+ * renderCombo(): 콤보 표시 업데이트
+ * 2 미만이면 숨기고, 이상이면 콤보 수에 따라 색상 클래스 적용
+ */
 function renderCombo() {
     const el = document.getElementById('combo');
-    if (combo < 2) { el.className = 'combo'; return; }
+    if (combo < 2) { el.className = 'combo'; return; } /* 클래스 초기화 → 숨김 */
     el.textContent = `🔥 ${combo} 콤보!`;
+    /* 삼항 연산자 중첩: Python의 조건부 표현식 (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2') */
     el.className = 'combo show ' + (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2');
 }
 
-/* ── SVG helpers ───────────────────────────────────────────────── */
+/* ── 조성 관련 함수 ───────────────────────────────────────────── */
 
+/*
+ * buildNotePool(keySig): 선택된 조성에 맞는 출제 가능 음표 목록을 반환
+ * 예) 사장조(F#)면 F4 대신 F#4, F5 대신 F#5가 포함됨
+ * Python으로 표현하면:
+ *   pool = []
+ *   for oct in [4, 5]:
+ *       for letter in ['C','D','E','F','G','A','B']:
+ *           if letter in keySig.sharps: pool.append(find_note(f"{letter}#{oct}"))
+ *           elif letter in keySig.flats: pool.append(find_note(f"{letter}♭{oct}"))
+ *           else: pool.append(find_note(f"{letter}{oct}"))
+ */
+function buildNotePool(keySig) {
+    const letters = ['C','D','E','F','G','A','B'];
+    const octaves = [4, 5];
+    const pool = [];
+    for (const oct of octaves) {
+        for (const letter of letters) {
+            let note;
+            if (keySig.sharps.includes(letter)) {
+                /* ALL_NOTES에서 해당 샵 음표 찾기. 예: 'F#4' */
+                note = ALL_NOTES.find(n => n.id === `${letter}#${oct}`);
+            } else if (keySig.flats.includes(letter)) {
+                /* ALL_NOTES에서 해당 플랫 음표 찾기. 예: 'B♭4' (♭ 유니코드 문자 사용) */
+                note = ALL_NOTES.find(n => n.id === `${letter}♭${oct}`);
+            } else {
+                /* 자연음 찾기. 예: 'C4' */
+                note = ALL_NOTES.find(n => n.id === `${letter}${oct}`);
+            }
+            if (note) pool.push(note);
+        }
+    }
+    return pool;
+}
+
+/*
+ * renderKeySignature(keySig): 악보에 조표를 그리고 힌트 텍스트를 업데이트
+ *
+ * ★ 이미지로 교체할 때: 이 함수 내부의 SVG 텍스트 코드를 지우고
+ *   <image> 태그로 조표 이미지를 배치하면 됨. 함수 시그니처(인자/호출부)는 그대로 유지.
+ *
+ * keySig.sharps/flats가 비어있으면(다장조) 조표 없이 힌트만 숨김 처리.
+ */
+function renderKeySignature(keySig) {
+    const svg = document.getElementById('staff-svg');
+
+    /* 기존 조표 그룹 제거 */
+    const old = document.getElementById('key-sig-grp');
+    if (old) old.remove();
+
+    /* 힌트 텍스트 업데이트 */
+    const hint = document.getElementById('key-hint');
+    if (!keySig.hint) {
+        hint.className = 'key-hint'; /* 다장조: 힌트 숨김 */
+        return;
+    }
+    hint.textContent = `현재 조성: ${keySig.name} (${keySig.hint})`;
+    hint.className = 'key-hint show';
+
+    /* ── 조표 SVG 그리기 ─────────────────────────────────────
+     * 조표 기호는 x=80 부터 시작해 14px 간격으로 배치
+     * y좌표는 오선 위치 기반 (SHARP_Y / FLAT_Y 참조)
+     * 이미지로 교체 시: 아래 블록을 <image> 태그 코드로 대체
+     * ──────────────────────────────────────────────────────── */
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('id', 'key-sig-grp');
+
+    const isSharp = keySig.sharps.length > 0;
+    const accList = isSharp ? keySig.sharps : keySig.flats;
+    const yMap    = isSharp ? SHARP_Y : FLAT_Y;
+    const sym     = isSharp ? '♯' : '♭';
+    const startX  = 80;
+    const stepX   = 14;
+
+    accList.forEach((letter, i) => {
+        const x = startX + i * stepX;
+        const y = yMap[letter];
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('x', String(x));
+        /* 플랫 기호는 위쪽 기준점 사용으로 y를 조금 조정 */
+        t.setAttribute('y', String(isSharp ? y + 5 : y + 7));
+        t.setAttribute('font-size', '16');
+        t.setAttribute('font-family', 'Georgia, serif');
+        t.setAttribute('fill', '#333');
+        t.setAttribute('text-anchor', 'middle');
+        t.textContent = sym;
+        g.appendChild(t);
+    });
+
+    svg.appendChild(g);
+}
+
+/* ── SVG 헬퍼 함수들 ──────────────────────────────────────────── */
+
+/*
+ * mk(tag, attrs): SVG 요소 생성 유틸리티 함수
+ * Python의 헬퍼 함수와 동일한 개념
+ * document.createElementNS: SVG 네임스페이스로 요소 생성
+ * Object.entries: Python의 dict.items()와 동일
+ */
 function mk(tag, attrs) {
     const e = document.createElementNS(NS, tag);
-    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); /* 속성 일괄 설정 */
     return e;
 }
 
+/*
+ * initStaff(): 악보 오선지 초기화 (앱 시작 시 한 번만 실행)
+ * SVG에 오선 5개 + 양쪽 세로선 + 음자리표를 그림
+ */
 function initStaff() {
     const svg = document.getElementById('staff-svg');
+    /* STAFF_Y 배열을 순회하며 5개의 가로선을 그림 (Python의 for y in STAFF_Y: 와 동일) */
     STAFF_Y.forEach(y => svg.appendChild(mk('line', {
-        x1: 22, y1: y, x2: 468, y2: y,
+        x1: 22, y1: y, x2: 468, y2: y,       /* 가로선: x=22부터 x=468까지 */
         stroke: '#333', 'stroke-width': 1.5
     })));
+    /* 왼쪽 세로선 */
     svg.appendChild(mk('line', { x1:22,  y1:55, x2:22,  y2:135, stroke:'#333', 'stroke-width':2 }));
+    /* 오른쪽 세로선 */
     svg.appendChild(mk('line', { x1:468, y1:55, x2:468, y2:135, stroke:'#333', 'stroke-width':2 }));
 
+    /* 음자리표(𝄞) 텍스트 요소 생성 및 추가 */
     const clef = document.createElementNS(NS, 'text');
     clef.setAttribute('x', '24');
     clef.setAttribute('y', '152');
     clef.setAttribute('font-size', '107');
     clef.setAttribute('font-family', 'Georgia, "Times New Roman", serif');
     clef.setAttribute('fill', '#222');
-    clef.textContent = '𝄞';
+    clef.textContent = '𝄞'; /* 높은 음자리표 유니코드 문자 */
     svg.appendChild(clef);
 }
 
+/*
+ * drawNote(note): 악보에 음표 하나를 그림
+ * 기존 음표(.ngrp 클래스)는 먼저 지우고 새로 그림
+ */
 function drawNote(note) {
-    document.querySelectorAll('.ngrp').forEach(e => e.remove());
+    document.querySelectorAll('.ngrp').forEach(e => e.remove()); /* 이전 음표 모두 제거 */
     const svg = document.getElementById('staff-svg');
-    const g = document.createElementNS(NS, 'g');
-    g.setAttribute('class', 'ngrp');
+    const g = document.createElementNS(NS, 'g'); /* g: SVG 그룹 요소 (관련 요소를 묶음) */
+    g.setAttribute('class', 'ngrp'); /* CSS 애니메이션 적용을 위해 클래스 설정 */
 
-    const x = 280, y = note.y;
+    const x = 280, y = note.y; /* 음표 머리의 중심 좌표 */
 
+    /* 보조선 추가: C4(y=155)처럼 오선 밖에 있는 음표는 보조선이 필요 */
     if (y >= 155) g.appendChild(mk('line', {
-        x1: x-19, y1: 155, x2: x+19, y2: 155,
+        x1: x-19, y1: 155, x2: x+19, y2: 155, /* 음표 머리보다 좌우로 약간 넓게 */
         stroke: '#333', 'stroke-width': 1.5
     }));
+    /* B5(y=35)처럼 오선 위에 있는 음표의 위쪽 보조선 */
     if (y <= 35) g.appendChild(mk('line', {
         x1: x-19, y1: 35, x2: x+19, y2: 35,
         stroke: '#333', 'stroke-width': 1.5
     }));
 
+    /* 임시표(♯ 또는 ♭) 그리기 */
     if (note.acc) {
-        const sym = note.acc === 'sharp' ? '♯' : '♭';
-        const ay  = note.acc === 'flat'  ? y + 7 : y + 5;
+        const sym = note.acc === 'sharp' ? '♯' : '♭'; /* 샵이면 ♯, 플랫이면 ♭ */
+        const ay  = note.acc === 'flat'  ? y + 7 : y + 5; /* 플랫은 아래 기준, 샵은 중앙 기준 */
         const acc = document.createElementNS(NS, 'text');
-        acc.setAttribute('x', String(x - 19));
+        acc.setAttribute('x', String(x - 19)); /* 음표 머리 왼쪽에 배치 */
         acc.setAttribute('y', String(ay));
         acc.setAttribute('font-size', '17');
         acc.setAttribute('font-family', 'Georgia, serif');
         acc.setAttribute('fill', '#111');
-        acc.setAttribute('text-anchor', 'middle');
+        acc.setAttribute('text-anchor', 'middle'); /* 텍스트를 x좌표 기준으로 가운데 정렬 */
         acc.textContent = sym;
         g.appendChild(acc);
     }
 
+    /* 음표 머리: 타원형 (약간 기울어진 모양) */
     g.appendChild(mk('ellipse', {
-        cx: x, cy: y, rx: 9, ry: 6.5,
+        cx: x, cy: y, rx: 9, ry: 6.5,      /* 중심(cx,cy), 가로반지름(rx), 세로반지름(ry) */
         fill: '#111',
-        transform: `rotate(-15,${x},${y})`
+        transform: `rotate(-15,${x},${y})`  /* (x,y)를 중심으로 -15도 회전 */
     }));
 
-    const up = y >= 95;
+    /*
+     * 음표 기둥(stem) 방향 결정:
+     * 악보 관례상 가온선(B4, y=95) 아래 음표는 기둥이 위로,
+     * 위 음표는 기둥이 아래로 향함
+     */
+    const up = y >= 95; /* y값이 클수록 아래쪽 → 하단 음표는 기둥 위로 */
     g.appendChild(mk('line', {
-        x1: up ? x+8.5 : x-8.5,
+        x1: up ? x+8.5 : x-8.5,  /* 기둥 오른쪽(위로) 또는 왼쪽(아래로) 시작 */
         y1: up ? y-2   : y+2,
         x2: up ? x+8.5 : x-8.5,
-        y2: up ? y-42  : y+42,
+        y2: up ? y-42  : y+42,   /* 42px 길이의 기둥 */
         stroke: '#111', 'stroke-width': 2
     }));
 
     svg.appendChild(g);
 }
 
-/* ── Piano builder ─────────────────────────────────────────────── */
+/* ── 피아노 건반 생성 ─────────────────────────────────────────── */
 
+/*
+ * buildPiano(): 피아노 건반 HTML 요소를 동적으로 생성
+ * Python에서 for문으로 리스트 항목마다 위젯을 만드는 것과 유사
+ */
 function buildPiano() {
     const piano = document.getElementById('piano');
+    /* 피아노 전체 너비 = 흰 건반 수 × 흰 건반 너비 */
     piano.style.width = (WHITE_NOTES.length * WHITE_W) + 'px';
 
+    /* 흰 건반 생성 */
     WHITE_NOTES.forEach((n, i) => {
-        const k = document.createElement('div');
+        const k = document.createElement('div'); /* div 요소 생성 */
         k.className = 'key white';
-        k.style.left = (i * WHITE_W) + 'px';
-        k.dataset.keyid = n.keyId;
+        k.style.left = (i * WHITE_W) + 'px';    /* 절대 위치: 인덱스 × 건반 너비 */
+        k.dataset.keyid = n.keyId;               /* data-keyid 속성 설정 */
+        /* innerHTML: 내부 HTML을 문자열로 설정. 템플릿 리터럴 사용 */
         k.innerHTML =
             `<span class="note-id">${n.id}</span>` +
             `<span class="solfege">${n.label}</span>`;
+        /* addEventListener: 이벤트 리스너 등록 (Python의 button.bind('click', func)와 유사) */
         k.addEventListener('click', () => answer(n.keyId, k));
-        piano.appendChild(k);
+        piano.appendChild(k); /* 피아노 컨테이너에 건반 추가 */
     });
 
+    /* 검은 건반 생성 */
     BLACK_KEY_DEFS.forEach(bk => {
         const k = document.createElement('div');
         k.className = 'key black';
+        /* 검은 건반 위치: 왼쪽 흰 건반 위치 + 흰 건반 너비 - 검은 건반 너비의 절반 */
         k.style.left = (bk.whiteLeft * WHITE_W + WHITE_W - Math.floor(BLACK_W / 2)) + 'px';
         k.dataset.keyid = bk.keyId;
-        k.innerHTML = '';
+        k.innerHTML = ''; /* 검은 건반은 텍스트 없음 */
         k.addEventListener('click', () => answer(bk.keyId, k));
         piano.appendChild(k);
     });
 }
 
-/* ── Screen management ─────────────────────────────────────────── */
+/* ── 화면 전환 ────────────────────────────────────────────────── */
 
+/*
+ * showScreen(id): 화면 전환 함수
+ * 모든 .screen에서 'active' 클래스 제거 후 목표 화면에만 추가
+ * Python의 tkinter에서 frame.tkraise()와 유사한 개념
+ */
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
 }
 
-/* ── Quiz logic ────────────────────────────────────────────────── */
+/* ── 퀴즈 로직 ────────────────────────────────────────────────── */
 
+/* startQuiz(): 퀴즈 시작 - 모든 상태 초기화 후 첫 문제 출제 */
 function startQuiz() {
+    /* 난이도에 해당하는 조성 목록에서 랜덤으로 하나 선택 */
+    const keySigPool = KEY_SIGNATURES[settingDifficulty];
+    currentKeySig = keySigPool[Math.floor(Math.random() * keySigPool.length)];
+    /* 선택된 조성에 맞는 출제 음표 목록 생성 */
+    notePool = buildNotePool(currentKeySig);
+
     sc = 0; tot = 0; ok = true; combo = 0; maxCombo = 0;
     wrongMap = {};
+    /* textContent: 요소의 텍스트 내용을 변경 */
     document.getElementById('sc').textContent  = 0;
     document.getElementById('tot').textContent = 0;
     document.getElementById('prog-tot').textContent = totalQ;
     document.getElementById('prog-cur').textContent = 0;
     renderCombo();
     showScreen('screen-quiz');
-    quizStartTime = Date.now();
+    /* 화면 전환 후 조표 및 힌트 렌더링 */
+    renderKeySignature(currentKeySig);
+    quizStartTime = Date.now(); /* 현재 시각(밀리초) 기록. Python의 time.time()과 유사 */
     next();
 }
 
+/* next(): 다음 문제 출제 */
 function next() {
-    ok = true;
+    ok = true; /* 다시 입력 받을 수 있도록 */
     const fb = document.getElementById('fb');
-    fb.textContent = '';
-    fb.className = 'feedback';
+    fb.textContent = '';          /* 피드백 메시지 초기화 */
+    fb.className = 'feedback';    /* 색상 클래스 제거 */
+    /* 모든 건반에서 정답/오답 색상 클래스 제거 */
     document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
-    cur = ALL_NOTES[Math.floor(Math.random() * ALL_NOTES.length)];
-    drawNote(cur);
-    startTimer();
+    /* 현재 조성의 출제 가능 음표 중 랜덤 선택. Python의 random.choice(notePool)과 동일 */
+    cur = notePool[Math.floor(Math.random() * notePool.length)];
+    drawNote(cur); /* 선택된 음표를 악보에 그림 */
+    startTimer();  /* 타이머 시작 */
 }
 
+/*
+ * answer(keyId, keyEl): 사용자가 건반을 클릭했을 때 호출
+ * keyId: 클릭한 건반의 ID
+ * keyEl: 클릭한 건반의 DOM 요소 (시각적 피드백을 위해 필요)
+ */
 function answer(keyId, keyEl) {
-    if (!ok) return;
+    if (!ok) return; /* 이미 처리 중이면 무시 (중복 클릭 방지) */
     ok = false;
     stopTimer();
-    document.getElementById('tot').textContent = ++tot;
+    document.getElementById('tot').textContent = ++tot; /* ++tot: tot를 1 증가시킨 값 사용 */
 
     const fb = document.getElementById('fb');
     if (keyId === cur.keyId) {
+        /* 정답인 경우 */
         document.getElementById('sc').textContent = ++sc;
-        keyEl.classList.add('correct');
+        keyEl.classList.add('correct');  /* 클릭한 건반 초록색으로 */
         combo++;
         if (combo > maxCombo) maxCombo = combo;
         fb.textContent = '✓ 정답입니다!';
         fb.className = 'feedback correct';
     } else {
-        keyEl.classList.add('wrong');
+        /* 오답인 경우 */
+        keyEl.classList.add('wrong');    /* 클릭한 건반 빨간색으로 */
+        /* 실제 정답 건반도 초록색으로 표시 (정답이 어디인지 알려줌) */
         document.querySelector(`[data-keyid="${cur.keyId}"]`).classList.add('correct');
+        /* wrongMap에 해당 음 틀린 횟수 +1 (없으면 0으로 초기화 후 +1) */
         wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1;
         combo = 0;
         fb.textContent = `✗ 오답! 정답은 ${cur.id}`;
@@ -727,22 +1080,29 @@ function answer(keyId, keyEl) {
     afterAnswer();
 }
 
+/*
+ * afterAnswer(): 답변 처리 후 공통 로직
+ * setTimeout: 지정 ms 후 함수 한 번 실행. Python의 threading.Timer(1.5, func).start()와 유사
+ */
 function afterAnswer() {
     document.getElementById('prog-cur').textContent = tot;
     if (tot >= totalQ) {
-        setTimeout(showResult, 1500);
+        setTimeout(showResult, 1500); /* 1.5초 후 결과 화면으로 */
     } else {
-        setTimeout(next, 1500);
+        setTimeout(next, 1500);       /* 1.5초 후 다음 문제 */
     }
 }
 
-/* ── Result Screen ─────────────────────────────────────────────── */
+/* ── 결과 화면 ────────────────────────────────────────────────── */
 
+/* showResult(): 결과 화면 표시 */
 function showResult() {
     stopTimer();
+    /* Date.now(): 현재 시각(ms). 퀴즈 시작 시각과의 차이를 초로 변환 */
     const elapsed = Math.round((Date.now() - quizStartTime) / 1000);
-    const rate    = Math.round(sc / totalQ * 100);
+    const rate    = Math.round(sc / totalQ * 100); /* 정답률 (%) */
 
+    /* 결과 화면의 각 요소에 값 설정 */
     document.getElementById('res-sc').textContent    = sc;
     document.getElementById('res-tot').textContent   = totalQ;
     document.getElementById('res-rate').textContent  = rate + '%';
@@ -750,7 +1110,13 @@ function showResult() {
     document.getElementById('res-time').textContent  = elapsed + '초';
 
     const list   = document.getElementById('wrong-list');
-    list.innerHTML = '';
+    list.innerHTML = ''; /* 이전 내용 초기화 */
+
+    /*
+     * Object.entries(wrongMap): Python의 wrongMap.items()와 동일
+     * sort((a, b) => b[1] - a[1]): 틀린 횟수 내림차순 정렬
+     *   (Python의 sorted(items, key=lambda x: -x[1])와 동일)
+     */
     const wrongs = Object.entries(wrongMap).sort((a, b) => b[1] - a[1]);
 
     if (wrongs.length === 0) {
@@ -768,26 +1134,43 @@ function showResult() {
     showScreen('screen-result');
 }
 
-/* ── Option button groups ──────────────────────────────────────── */
+/* ── 옵션 버튼 그룹 설정 ──────────────────────────────────────── */
 
+/*
+ * setupOptBtns(groupId, onChange): 라디오 버튼처럼 동작하는 옵션 버튼 그룹 설정
+ * groupId: 그룹 컨테이너의 id
+ * onChange: 버튼 클릭 시 실행할 콜백 함수 (Python의 고차 함수 개념)
+ */
 function setupOptBtns(groupId, onChange) {
     const group = document.getElementById(groupId);
     group.querySelectorAll('.opt-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            /* 같은 그룹의 모든 버튼에서 'active' 제거 */
             group.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            onChange(btn.dataset);
+            btn.classList.add('active'); /* 클릭된 버튼에만 'active' 추가 */
+            onChange(btn.dataset);       /* 버튼의 data-* 속성들을 객체로 전달 */
         });
     });
 }
 
-setupOptBtns('q-btns', ({ q })   => { totalQ    = parseInt(q,   10); });
-setupOptBtns('t-btns', ({ sec }) => { settingSec = parseInt(sec, 10); });
+/* 문제 수 버튼 그룹: data-q 값을 읽어 totalQ 변수 업데이트 */
+setupOptBtns('q-btns', ({ q })    => { totalQ             = parseInt(q,   10); }); /* parseInt: 문자열→정수 변환 */
+/* 제한 시간 버튼 그룹: data-sec 값을 읽어 settingSec 변수 업데이트 */
+setupOptBtns('t-btns', ({ sec })  => { settingSec          = parseInt(sec, 10); });
+/* 난이도 버튼 그룹: data-diff 값을 읽어 settingDifficulty 변수 업데이트 */
+setupOptBtns('d-btns', ({ diff }) => { settingDifficulty   = diff; });
 
+/* 시작하기 버튼 클릭 이벤트 */
 document.getElementById('start-btn').addEventListener('click', startQuiz);
+/* 처음으로 돌아가기 버튼 클릭 이벤트 */
 document.getElementById('restart-btn').addEventListener('click', () => showScreen('screen-start'));
 
-/* ── Init ──────────────────────────────────────────────────────── */
+/* ── 초기화 ──────────────────────────────────────────────────── */
+/*
+ * 페이지 로드 시 즉시 실행 (Python의 if __name__ == '__main__': 아래 코드와 유사)
+ * initStaff(): 악보 오선지 그리기
+ * buildPiano(): 피아노 건반 HTML 생성
+ */
 initStaff();
 buildPiano();
 </script>
