@@ -496,6 +496,15 @@
                 <button class="opt-btn"        data-diff="advanced">고급</button>
             </div>
         </div>
+        <!-- 음자리표 선택 그룹 -->
+        <div class="option-group">
+            <div class="option-group-label">음자리표</div>
+            <div class="option-btns" id="clef-btns">
+                <button class="opt-btn active" data-clef="treble">높은음자리표</button>
+                <button class="opt-btn"        data-clef="bass">낮은음자리표</button>
+                <button class="opt-btn"        data-clef="random">랜덤</button>
+            </div>
+        </div>
         <!-- 음표 소리 ON/OFF -->
         <div class="option-group">
             <div class="option-group-label">음표 소리</div>
@@ -666,6 +675,53 @@ const BLACK_NOTES = [
 /* 흰 건반 + 검은 건반 전체 목록. Python의 리스트 덧셈: WHITE_NOTES + BLACK_NOTES */
 const ALL_NOTES = [...WHITE_NOTES, ...BLACK_NOTES];
 
+/* ── 낮은음자리표(베이스) 음표 데이터 ────────────────────────── */
+/*
+ * BASS_WHITE_NOTES: C2~B3 음역대 흰 건반 음표
+ * 오선 y좌표는 높은음자리표와 동일한 SVG 좌표계를 재활용
+ * (오선: y=55/75/95/115/135)
+ */
+const BASS_WHITE_NOTES = [
+    { id:'E2', label:'마', y:155, acc:null, keyId:'E2' },
+    { id:'F2', label:'바', y:145, acc:null, keyId:'F2' },
+    { id:'G2', label:'사', y:135, acc:null, keyId:'G2' },
+    { id:'A2', label:'가', y:125, acc:null, keyId:'A2' },
+    { id:'B2', label:'나', y:115, acc:null, keyId:'B2' },
+    { id:'C3', label:'다', y:105, acc:null, keyId:'C3' },
+    { id:'D3', label:'라', y: 95, acc:null, keyId:'D3' },
+    { id:'E3', label:'마', y: 85, acc:null, keyId:'E3' },
+    { id:'F3', label:'바', y: 75, acc:null, keyId:'F3' },
+    { id:'G3', label:'사', y: 65, acc:null, keyId:'G3' },
+    { id:'A3', label:'가', y: 55, acc:null, keyId:'A3' },
+    { id:'B3', label:'나', y: 25, acc:null, keyId:'B3' },
+];
+
+/*
+ * BASS_BLACK_NOTES: 낮은음자리표 검은 건반 음표 (샵/플랫 쌍)
+ * keyId: 같은 건반의 샵/플랫은 동일한 keyId 공유
+ */
+const BASS_BLACK_NOTES = [
+    { id:'F#2', y:145, acc:'sharp', keyId:'Fs2' },
+    { id:'G♭2', y:135, acc:'flat',  keyId:'Fs2' },
+    { id:'G#2', y:135, acc:'sharp', keyId:'Gs2' },
+    { id:'A♭2', y:125, acc:'flat',  keyId:'Gs2' },
+    { id:'A#2', y:125, acc:'sharp', keyId:'As2' },
+    { id:'B♭2', y:115, acc:'flat',  keyId:'As2' },
+    { id:'C#3', y:105, acc:'sharp', keyId:'Cs3' },
+    { id:'D♭3', y: 95, acc:'flat',  keyId:'Cs3' },
+    { id:'D#3', y: 95, acc:'sharp', keyId:'Ds3' },
+    { id:'E♭3', y: 85, acc:'flat',  keyId:'Ds3' },
+    { id:'F#3', y: 75, acc:'sharp', keyId:'Fs3' },
+    { id:'G♭3', y: 65, acc:'flat',  keyId:'Fs3' },
+    { id:'G#3', y: 65, acc:'sharp', keyId:'Gs3' },
+    { id:'A♭3', y: 55, acc:'flat',  keyId:'Gs3' },
+    { id:'A#3', y: 55, acc:'sharp', keyId:'As3' },
+    { id:'B♭3', y: 25, acc:'flat',  keyId:'As3' },
+];
+
+/* 낮은음자리표 전체 음표 목록 */
+const BASS_ALL_NOTES = [...BASS_WHITE_NOTES, ...BASS_BLACK_NOTES];
+
 /* ── 조성(Key Signature) 데이터 ─────────────────────────────── */
 /*
  * 난이도별 사용할 조성 목록. 각 조성 객체:
@@ -729,6 +785,22 @@ const BLACK_KEY_DEFS = [
     { keyId:'As5', sharp:'A#5', flat:'B♭5', whiteLeft:12 },
 ];
 
+/*
+ * BLACK_KEY_DEFS_BASS: 낮은음자리표(E2~B3) 검은 건반 위치 정보
+ * whiteLeft: 이 검은 건반 바로 왼쪽에 있는 흰 건반의 인덱스 (BASS_WHITE_NOTES 기준, 0부터 시작)
+ * E2=0, F2=1, G2=2, A2=3, B2=4, C3=5, D3=6, E3=7, F3=8, G3=9, A3=10, B3=11
+ */
+const BLACK_KEY_DEFS_BASS = [
+    { keyId:'Fs2', sharp:'F#2', flat:'G♭2', whiteLeft: 1 },  /* F2(1번)과 G2(2번) 사이 */
+    { keyId:'Gs2', sharp:'G#2', flat:'A♭2', whiteLeft: 2 },  /* G2(2번)과 A2(3번) 사이 */
+    { keyId:'As2', sharp:'A#2', flat:'B♭2', whiteLeft: 3 },  /* A2(3번)과 B2(4번) 사이 */
+    { keyId:'Cs3', sharp:'C#3', flat:'D♭3', whiteLeft: 5 },  /* C3(5번)과 D3(6번) 사이 */
+    { keyId:'Ds3', sharp:'D#3', flat:'E♭3', whiteLeft: 6 },  /* D3(6번)과 E3(7번) 사이 */
+    { keyId:'Fs3', sharp:'F#3', flat:'G♭3', whiteLeft: 8 },  /* F3(8번)과 G3(9번) 사이 */
+    { keyId:'Gs3', sharp:'G#3', flat:'A♭3', whiteLeft: 9 },  /* G3(9번)과 A3(10번) 사이 */
+    { keyId:'As3', sharp:'A#3', flat:'B♭3', whiteLeft:10 },  /* A3(10번)과 B3(11번) 사이 */
+];
+
 const WHITE_W = 38;     /* 흰 건반 너비 (픽셀) */
 const BLACK_W = 22;     /* 검은 건반 너비 (픽셀) */
 const STAFF_Y = [55, 75, 95, 115, 135]; /* 오선의 y좌표 5개 */
@@ -756,6 +828,8 @@ let currentKeySig = null;           /* 현재 퀴즈에서 사용 중인 조성 
 let notePool = [];                  /* 현재 조성에서 출제 가능한 음표 목록 */
 let retryWrongMode = false;         /* 틀린 문제 집중 재출제 모드 여부 */
 let wrongNoteIds = [];              /* 퀴즈 중 틀린 음표 id 목록 (중복 없음, 재출제 가중치에 사용) */
+let settingClef = 'treble';         /* 선택된 음자리표: 'treble' | 'bass' | 'random' */
+let activeClef  = 'treble';         /* 현재 문제에서 실제 사용 중인 음자리표 */
 
 /* ── 타이머 ──────────────────────────────────────────────────── */
 const TICK_MS = 50;         /* 타이머 갱신 간격 (50ms = 초당 20번 업데이트) */
@@ -842,32 +916,36 @@ function renderCombo() {
 /* ── 조성 관련 함수 ───────────────────────────────────────────── */
 
 /*
- * buildNotePool(keySig): 선택된 조성에 맞는 출제 가능 음표 목록을 반환
+ * buildNotePool(keySig, clef): 선택된 조성과 음자리표에 맞는 출제 가능 음표 목록을 반환
+ * - clef === 'treble': C4~B5 (ALL_NOTES 사용)
+ * - clef === 'bass'  : E2~B3 (BASS_ALL_NOTES 사용)
  * 예) 사장조(F#)면 F4 대신 F#4, F5 대신 F#5가 포함됨
  * Python으로 표현하면:
  *   pool = []
- *   for oct in [4, 5]:
+ *   for oct in octaves:
  *       for letter in ['C','D','E','F','G','A','B']:
  *           if letter in keySig.sharps: pool.append(find_note(f"{letter}#{oct}"))
  *           elif letter in keySig.flats: pool.append(find_note(f"{letter}♭{oct}"))
  *           else: pool.append(find_note(f"{letter}{oct}"))
  */
-function buildNotePool(keySig) {
+function buildNotePool(keySig, clef) {
     const letters = ['C','D','E','F','G','A','B'];
-    const octaves = [4, 5];
+    /* 음자리표에 따라 사용할 음표 데이터셋과 옥타브 목록 결정 */
+    const noteSet = (clef === 'bass') ? BASS_ALL_NOTES : ALL_NOTES;
+    const octaves = (clef === 'bass') ? [2, 3] : [4, 5];
     const pool = [];
     for (const oct of octaves) {
         for (const letter of letters) {
             let note;
             if (keySig.sharps.includes(letter)) {
-                /* ALL_NOTES에서 해당 샵 음표 찾기. 예: 'F#4' */
-                note = ALL_NOTES.find(n => n.id === `${letter}#${oct}`);
+                /* noteSet에서 해당 샵 음표 찾기. 예: 'F#4' */
+                note = noteSet.find(n => n.id === `${letter}#${oct}`);
             } else if (keySig.flats.includes(letter)) {
-                /* ALL_NOTES에서 해당 플랫 음표 찾기. 예: 'B♭4' (♭ 유니코드 문자 사용) */
-                note = ALL_NOTES.find(n => n.id === `${letter}♭${oct}`);
+                /* noteSet에서 해당 플랫 음표 찾기. 예: 'B♭4' (♭ 유니코드 문자 사용) */
+                note = noteSet.find(n => n.id === `${letter}♭${oct}`);
             } else {
                 /* 자연음 찾기. 예: 'C4' */
-                note = ALL_NOTES.find(n => n.id === `${letter}${oct}`);
+                note = noteSet.find(n => n.id === `${letter}${oct}`);
             }
             if (note) pool.push(note);
         }
@@ -962,15 +1040,41 @@ function initStaff() {
     /* 오른쪽 세로선 */
     svg.appendChild(mk('line', { x1:468, y1:55, x2:468, y2:135, stroke:'#333', 'stroke-width':2 }));
 
-    /* 음자리표(𝄞) 텍스트 요소 생성 및 추가 */
-    const clef = document.createElementNS(NS, 'text');
-    clef.setAttribute('x', '24');
-    clef.setAttribute('y', '152');
-    clef.setAttribute('font-size', '107');
-    clef.setAttribute('font-family', 'Georgia, "Times New Roman", serif');
-    clef.setAttribute('fill', '#222');
-    clef.textContent = '𝄞'; /* 높은 음자리표 유니코드 문자 */
-    svg.appendChild(clef);
+    /* 음자리표는 drawClef()로 위임 (퀴즈 중 교체 가능하도록 분리) */
+    drawClef('treble');
+}
+
+/*
+ * drawClef(clef): SVG에 음자리표 기호를 그림
+ * 기존 음자리표(id='clef-symbol')를 먼저 제거하고 새로 생성
+ * - 'treble': 높은음자리표 𝄞
+ * - 'bass'  : 낮은음자리표 𝄢
+ */
+function drawClef(clef) {
+    const svg = document.getElementById('staff-svg');
+    /* 기존 음자리표 요소 제거 */
+    const old = document.getElementById('clef-symbol');
+    if (old) old.remove();
+
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('id', 'clef-symbol');
+    t.setAttribute('fill', '#222');
+    if (clef === 'bass') {
+        /* 낮은음자리표: 𝄢 */
+        t.setAttribute('x', '28');
+        t.setAttribute('y', '100');
+        t.setAttribute('font-size', '58');
+        t.setAttribute('font-family', 'Georgia, serif');
+        t.textContent = '𝄢';
+    } else {
+        /* 높은음자리표(기본): 𝄞 */
+        t.setAttribute('x', '24');
+        t.setAttribute('y', '152');
+        t.setAttribute('font-size', '107');
+        t.setAttribute('font-family', 'Georgia, "Times New Roman", serif');
+        t.textContent = '𝄞';
+    }
+    svg.appendChild(t);
 }
 
 /*
@@ -1050,16 +1154,25 @@ function drawNote(note) {
 /* ── 피아노 건반 생성 ─────────────────────────────────────────── */
 
 /*
- * buildPiano(): 피아노 건반 HTML 요소를 동적으로 생성
+ * buildPiano(clef): 피아노 건반 HTML 요소를 동적으로 생성
+ * clef 인자에 따라 사용할 음표 데이터셋과 검은 건반 정의를 선택
+ * - 'treble': 높은음자리표 — WHITE_NOTES(C4~B5), BLACK_KEY_DEFS
+ * - 'bass'  : 낮은음자리표 — BASS_WHITE_NOTES(E2~B3), BLACK_KEY_DEFS_BASS
  * Python에서 for문으로 리스트 항목마다 위젯을 만드는 것과 유사
  */
-function buildPiano() {
+function buildPiano(clef) {
     const piano = document.getElementById('piano');
+    piano.innerHTML = ''; /* 기존 건반 초기화 (재생성을 위해 비움) */
+
+    /* 음자리표에 따라 사용할 흰 건반 목록과 검은 건반 정의 선택 */
+    const whites = (clef === 'bass') ? BASS_WHITE_NOTES : WHITE_NOTES;
+    const blacks = (clef === 'bass') ? BLACK_KEY_DEFS_BASS : BLACK_KEY_DEFS;
+
     /* 피아노 전체 너비 = 흰 건반 수 × 흰 건반 너비 */
-    piano.style.width = (WHITE_NOTES.length * WHITE_W) + 'px';
+    piano.style.width = (whites.length * WHITE_W) + 'px';
 
     /* 흰 건반 생성 */
-    WHITE_NOTES.forEach((n, i) => {
+    whites.forEach((n, i) => {
         const k = document.createElement('div'); /* div 요소 생성 */
         k.className = 'key white';
         k.style.left = (i * WHITE_W) + 'px';    /* 절대 위치: 인덱스 × 건반 너비 */
@@ -1072,7 +1185,7 @@ function buildPiano() {
     });
 
     /* 검은 건반 생성 */
-    BLACK_KEY_DEFS.forEach(bk => {
+    blacks.forEach(bk => {
         const k = document.createElement('div');
         k.className = 'key black';
         /* 검은 건반 위치: 왼쪽 흰 건반 위치 + 흰 건반 너비 - 검은 건반 너비의 절반 */
@@ -1103,8 +1216,7 @@ function startQuiz() {
     /* 난이도에 해당하는 조성 목록에서 랜덤으로 하나 선택 */
     const keySigPool = KEY_SIGNATURES[settingDifficulty];
     currentKeySig = keySigPool[Math.floor(Math.random() * keySigPool.length)];
-    /* 선택된 조성에 맞는 출제 음표 목록 생성 */
-    notePool = buildNotePool(currentKeySig);
+    /* notePool과 음자리표는 next() 첫 호출 시 결정됨 */
 
     sc = 0; tot = 0; ok = true; combo = 0; maxCombo = 0;
     /*
@@ -1131,6 +1243,23 @@ function startQuiz() {
 /* next(): 다음 문제 출제 */
 function next() {
     ok = true; /* 다시 입력 받을 수 있도록 */
+
+    /*
+     * 음자리표 결정:
+     * - 'random': 50% 확률로 treble/bass 중 랜덤 선택
+     * - 'treble'/'bass': 설정값으로 고정
+     */
+    if (settingClef === 'random') {
+        activeClef = Math.random() < 0.5 ? 'treble' : 'bass';
+    } else {
+        activeClef = settingClef;
+    }
+    /* 음자리표 갱신 및 건반 재생성 */
+    drawClef(activeClef);
+    buildPiano(activeClef);
+    /* 현재 음자리표에 맞는 음표 풀 갱신 */
+    notePool = buildNotePool(currentKeySig, activeClef);
+
     const fb = document.getElementById('fb');
     fb.textContent = '';          /* 피드백 메시지 초기화 */
     fb.className = 'feedback';    /* 색상 클래스 제거 */
@@ -1283,21 +1412,26 @@ function updateBestRecord(score, total, pct) {
     const raw     = localStorage.getItem(STORAGE_KEY);
     /* JSON.parse: 문자열 → 객체 변환. Python의 json.loads()와 동일 */
     const records = raw ? JSON.parse(raw) : {};
-    const prev    = records[settingDifficulty]; /* 이 난이도의 기존 최고기록 */
+    /*
+     * 저장 키: 난이도_음자리표 형태 (예: 'beginner_treble', 'intermediate_bass', 'advanced_random')
+     * 난이도와 음자리표 조합별로 최고기록을 독립 관리
+     */
+    const recordKey = `${settingDifficulty}_${settingClef}`;
+    const prev      = records[recordKey]; /* 이 난이도+음자리표 조합의 기존 최고기록 */
 
     /* 날짜 문자열 생성: 'YYYY-MM-DD' 형식 */
     const today = new Date().toLocaleDateString('ko-KR',
         { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');
 
     if (!prev) {
-        /* 해당 난이도 첫 기록 */
-        records[settingDifficulty] = { score, total, pct, date: today };
+        /* 해당 난이도+음자리표 첫 기록 */
+        records[recordKey] = { score, total, pct, date: today };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         badge.textContent = '🏆 첫 기록 달성!';
         badge.className = 'best-record-badge new-record';
     } else if (pct > prev.pct) {
         /* 신기록 달성 */
-        records[settingDifficulty] = { score, total, pct, date: today };
+        records[recordKey] = { score, total, pct, date: today };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         badge.textContent = '🏆 신기록!';
         badge.className = 'best-record-badge new-record';
@@ -1333,6 +1467,8 @@ setupOptBtns('q-btns', ({ q })          => { totalQ            = parseInt(q,   1
 setupOptBtns('t-btns', ({ sec })        => { settingSec         = parseInt(sec, 10); });
 /* 난이도 버튼 그룹: data-diff 값을 읽어 settingDifficulty 변수 업데이트 */
 setupOptBtns('d-btns', ({ diff })       => { settingDifficulty  = diff; });
+/* 음자리표 버튼 그룹: data-clef 값을 읽어 settingClef 변수 업데이트 */
+setupOptBtns('clef-btns', ({ clef })    => { settingClef        = clef; });
 /* 음표 소리 버튼 그룹 */
 setupOptBtns('ns-btns', ({ notesound }) => { settingNoteSound   = (notesound === 'on'); });
 /* 효과음 버튼 그룹 */
@@ -1397,6 +1533,15 @@ function getAudioCtx() {
  * 샵(#)으로 통일. 플랫(♭) 이명동음은 아래 ENHARMONIC으로 변환
  */
 const NOTE_FREQ = {
+    /* 낮은음자리표 음역 (E2~B3) */
+    'E2' : 82.41, 'F2' : 87.31, 'F#2': 92.50,
+    'G2' : 98.00, 'G#2':103.83, 'A2' :110.00,
+    'A#2':116.54, 'B2' :123.47,
+    'C3' :130.81, 'C#3':138.59, 'D3' :146.83,
+    'D#3':155.56, 'E3' :164.81, 'F3' :174.61,
+    'F#3':185.00, 'G3' :196.00, 'G#3':207.65,
+    'A3' :220.00, 'A#3':233.08, 'B3' :246.94,
+    /* 높은음자리표 음역 (C4~B5) */
     'C4' :261.63, 'C#4':277.18, 'D4' :293.66, 'D#4':311.13,
     'E4' :329.63, 'F4' :349.23, 'F#4':369.99, 'G4' :392.00,
     'G#4':415.30, 'A4' :440.00, 'A#4':466.16, 'B4' :493.88,
@@ -1415,10 +1560,21 @@ const ENHARMONIC = {
  * 검은 건반 keyId(Cs4, Ds4 …)를 주파수에 직접 매핑
  */
 const KEYID_FREQ = {
+    /* 낮은음자리표 흰 건반 (E2~B3) */
+    'E2' : 82.41, 'F2' : 87.31, 'G2' : 98.00,
+    'A2' :110.00, 'B2' :123.47, 'C3' :130.81,
+    'D3' :146.83, 'E3' :164.81, 'F3' :174.61,
+    'G3' :196.00, 'A3' :220.00, 'B3' :246.94,
+    /* 낮은음자리표 검은 건반 */
+    'Fs2': 92.50, 'Gs2':103.83, 'As2':116.54,
+    'Cs3':138.59, 'Ds3':155.56, 'Fs3':185.00,
+    'Gs3':207.65, 'As3':233.08,
+    /* 높은음자리표 흰 건반 (C4~B5) */
     'C4' :261.63, 'D4' :293.66, 'E4' :329.63, 'F4' :349.23,
     'G4' :392.00, 'A4' :440.00, 'B4' :493.88,
     'C5' :523.25, 'D5' :587.33, 'E5' :659.25, 'F5' :698.46,
     'G5' :783.99, 'A5' :880.00, 'B5' :987.77,
+    /* 높은음자리표 검은 건반 */
     'Cs4':277.18, 'Ds4':311.13, 'Fs4':369.99, 'Gs4':415.30, 'As4':466.16,
     'Cs5':554.37, 'Ds5':622.25, 'Fs5':739.99, 'Gs5':830.61, 'As5':932.33
 };
@@ -1531,7 +1687,7 @@ function _pianoTone(freq, decay, duration, startAt) {
  * buildPiano(): 피아노 건반 HTML 생성
  */
 initStaff();
-buildPiano();
+buildPiano('treble');
 </script>
 </body>
 </html>
