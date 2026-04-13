@@ -64,6 +64,8 @@
             font-size: 0.95rem;
             color: #718096;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
+            min-width: 110px;
+            text-align: center;
         }
         .score b { color: #3182ce; font-size: 1.1rem; } /* b 태그(굵은 글자): 파란색으로 */
 
@@ -76,6 +78,8 @@
             font-weight: 600;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1);
             display: block;         /* 항상 표시 */
+            min-width: 80px;
+            text-align: center;
         }
         .combo.c2  { color: #2b6cb0; }      /* 2콤보 이상: 파란색 */
         .combo.c5  { color: #c05621; }      /* 5콤보 이상: 주황색 */
@@ -278,10 +282,10 @@
         /* ── 퀴즈 화면 상단 행 ────────────────────────────────── */
         .quiz-top-row {
             display: flex;
-            gap: 8px;               /* 모바일에서 간격 축소 (PC에서는 충분) */
+            gap: 12px;
             align-items: center;
-            width: var(--card-w);   /* 반응형: 카드 너비에 맞춤 */
-            flex-wrap: wrap;        /* 좁은 화면에서 줄바꿈 허용 */
+            justify-content: center;  /* 가운데 정렬 */
+            width: var(--card-w);
         }
 
 
@@ -294,6 +298,8 @@
             font-weight: 700;
             color: #718096;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            min-width: 80px;
+            text-align: center;
         }
         .progress .cur { color: #3182ce; font-size: 1.05rem; } /* 현재 문제 번호: 파란색 */
 
