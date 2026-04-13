@@ -1738,12 +1738,19 @@ function _pianoTone(freq, decay, duration, startAt) {
  */
 function scalePiano() {
     const piano = document.getElementById('piano');
-    const cardW = piano.parentElement.offsetWidth; /* 부모(.screen) 의 실제 표시 너비 */
-    const pianoW = WHITE_W * 14;                   /* 흰건반 14개 기준 피아노 고유 너비 */
-    const scale = Math.min(1, cardW / pianoW);     /* 1을 초과하면 확대 안 함 */
+    const cardW = document.querySelector('.card')
+                  ? document.querySelector('.card').offsetWidth
+                  : window.innerWidth * 0.96;
+    const pianoNaturalW = WHITE_W * 14;
+    const scale = Math.min(1, cardW / pianoNaturalW);
+
+    piano.style.transformOrigin = 'top center';  /* 가운데 기준으로 축소 */
     piano.style.transform = `scaleX(${scale})`;
-    /* 건반 컨테이너 높이도 축소 비율에 맞게 조정 */
     piano.style.height = (145 * scale) + 'px';
+
+    /* 피아노 컨테이너를 가운데 정렬 */
+    piano.style.display = 'flex';
+    piano.style.justifyContent = 'center';
 }
 
 /* 창 크기가 바뀔 때마다 피아노 스케일 재계산 */
