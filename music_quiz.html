@@ -479,23 +479,28 @@
          * PC(501px 이상)에서는 이 블록 안의 규칙이 완전히 무시됨
          */
         @media (max-width: 500px) {
-            /* body 간격 및 패딩 축소 */
-            body { gap: 10px; padding: 10px; }
+            body {
+                gap: 8px;
+                padding: 8px;
+                justify-content: flex-start;  /* 세로 가운데 정렬 해제 → 위에서부터 배치 */
+                padding-top: 12px;
+            }
 
-            /* 제목 크기 축소 */
-            h1 { font-size: 1.2rem; }
+            h1 { font-size: 1.1rem; }
 
-            /* 시작 카드 패딩 및 내부 간격 축소 */
-            .start-card { padding: 16px 20px; gap: 14px; }
+            .start-card {
+                padding: 14px 16px;
+                gap: 10px;
+                border-radius: 14px;
+            }
 
-            /* 옵션 그룹 간격 축소 */
-            .option-group { gap: 6px; }
+            .option-group { gap: 5px; }
 
-            /* 옵션 버튼 패딩 및 글자 크기 축소 */
-            .opt-btn { padding: 7px 0; font-size: 0.88rem; }
+            .option-group-label { font-size: 0.75rem; }
 
-            /* 시작하기 버튼 패딩 및 글자 크기 축소 */
-            .start-btn { padding: 11px 0; font-size: 1rem; }
+            .opt-btn { padding: 6px 0; font-size: 0.85rem; }
+
+            .start-btn { padding: 10px 0; font-size: 0.95rem; }
         }
     </style>
 </head>
