@@ -741,6 +741,7 @@ function timeout() {
     const fb = document.getElementById('fb');
     fb.textContent = `⏰ 시간 초과! 정답은 ${cur.id}`; /* 템플릿 리터럴: Python f-string과 동일 */
     fb.className = 'feedback wrong';
+    playEffect('wrong');
     wrongMap[cur.id] = (wrongMap[cur.id] || 0) + 1; /* 없으면 0으로 초기화 후 +1 */
     combo = 0;
     renderCombo();
@@ -916,8 +917,20 @@ function drawNote(note) {
         stroke: '#333', 'stroke-width': 1.5
     }));
 
-    /* 임시표(♯ 또는 ♭) 그리기 */
-    if (note.acc) {
+    /*
+     * 임시표(♯ 또는 ♭) 그리기
+     * 실제 악보 규칙: 조표에 이미 포함된 음(예: 사장조의 F#)은
+     * 음표 앞에 기호를 붙이지 않음. 조표에 없는 음에만 임시표 표시.
+     *
+     * note.id[0]: 음이름의 첫 글자 = 알파벳 음명 (예: 'F#4' → 'F')
+     */
+    const noteLetter = note.id[0];
+    const coveredByKeySig = currentKeySig && (
+        (note.acc === 'sharp' && currentKeySig.sharps.includes(noteLetter)) ||
+        (note.acc === 'flat'  && currentKeySig.flats.includes(noteLetter))
+    );
+
+    if (note.acc && !coveredByKeySig) {
         const sym = note.acc === 'sharp' ? '♯' : '♭'; /* 샵이면 ♯, 플랫이면 ♭ */
         const ay  = note.acc === 'flat'  ? y + 7 : y + 5; /* 플랫은 아래 기준, 샵은 중앙 기준 */
         const acc = document.createElementNS(NS, 'text');
@@ -977,7 +990,7 @@ function buildPiano() {
             `<span class="note-id">${n.id}</span>` +
             `<span class="solfege">${n.label}</span>`;
         /* addEventListener: 이벤트 리스너 등록 (Python의 button.bind('click', func)와 유사) */
-        k.addEventListener('click', () => answer(n.keyId, k));
+        k.addEventListener('click', () => { playKeyClick(n.keyId); answer(n.keyId, k); });
         piano.appendChild(k); /* 피아노 컨테이너에 건반 추가 */
     });
 
@@ -989,7 +1002,7 @@ function buildPiano() {
         k.style.left = (bk.whiteLeft * WHITE_W + WHITE_W - Math.floor(BLACK_W / 2)) + 'px';
         k.dataset.keyid = bk.keyId;
         k.innerHTML = ''; /* 검은 건반은 텍스트 없음 */
-        k.addEventListener('click', () => answer(bk.keyId, k));
+        k.addEventListener('click', () => { playKeyClick(bk.keyId); answer(bk.keyId, k); });
         piano.appendChild(k);
     });
 }
@@ -1041,8 +1054,9 @@ function next() {
     document.querySelectorAll('.key').forEach(k => k.classList.remove('correct', 'wrong'));
     /* 현재 조성의 출제 가능 음표 중 랜덤 선택. Python의 random.choice(notePool)과 동일 */
     cur = notePool[Math.floor(Math.random() * notePool.length)];
-    drawNote(cur); /* 선택된 음표를 악보에 그림 */
-    startTimer();  /* 타이머 시작 */
+    drawNote(cur);      /* 선택된 음표를 악보에 그림 */
+    playNote(cur.id);   /* 해당 음 자동 재생 */
+    startTimer();       /* 타이머 시작 */
 }
 
 /*
@@ -1065,6 +1079,7 @@ function answer(keyId, keyEl) {
         if (combo > maxCombo) maxCombo = combo;
         fb.textContent = '✓ 정답입니다!';
         fb.className = 'feedback correct';
+        playEffect('correct');
     } else {
         /* 오답인 경우 */
         keyEl.classList.add('wrong');    /* 클릭한 건반 빨간색으로 */
@@ -1075,6 +1090,7 @@ function answer(keyId, keyEl) {
         combo = 0;
         fb.textContent = `✗ 오답! 정답은 ${cur.id}`;
         fb.className = 'feedback wrong';
+        playEffect('wrong');
     }
     renderCombo();
     afterAnswer();
@@ -1164,6 +1180,154 @@ setupOptBtns('d-btns', ({ diff }) => { settingDifficulty   = diff; });
 document.getElementById('start-btn').addEventListener('click', startQuiz);
 /* 처음으로 돌아가기 버튼 클릭 이벤트 */
 document.getElementById('restart-btn').addEventListener('click', () => showScreen('screen-start'));
+
+/* ── Web Audio API ────────────────────────────────────────────── */
+
+/*
+ * AudioContext: 브라우저 오디오 엔진의 진입점
+ * 브라우저 자동재생 정책상 사용자 첫 상호작용(클릭 등) 이후에만 생성 가능
+ * 따라서 페이지 로드 시가 아니라 첫 사용 시점에 lazily 생성 (getAudioCtx 참고)
+ */
+let audioCtx = null;
+
+function getAudioCtx() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    /* 모바일에서 suspended 상태일 수 있으므로 resume 호출 */
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+/*
+ * 표준 주파수 테이블 (평균율, A4 = 440 Hz 기준)
+ * 계산식: freq = 440 × 2^((MIDI번호 - 69) / 12)
+ * 샵(#)으로 통일. 플랫(♭) 이명동음은 아래 ENHARMONIC으로 변환
+ */
+const NOTE_FREQ = {
+    'C4' :261.63, 'C#4':277.18, 'D4' :293.66, 'D#4':311.13,
+    'E4' :329.63, 'F4' :349.23, 'F#4':369.99, 'G4' :392.00,
+    'G#4':415.30, 'A4' :440.00, 'A#4':466.16, 'B4' :493.88,
+    'C5' :523.25, 'C#5':554.37, 'D5' :587.33, 'D#5':622.25,
+    'E5' :659.25, 'F5' :698.46, 'F#5':739.99, 'G5' :783.99,
+    'G#5':830.61, 'A5' :880.00, 'A#5':932.33, 'B5' :987.77
+};
+
+/* 이명동음(같은 건반, 다른 이름): 플랫 표기 → 샵 표기로 정규화 */
+const ENHARMONIC = {
+    'D♭':'C#', 'E♭':'D#', 'G♭':'F#', 'A♭':'G#', 'B♭':'A#'
+};
+
+/*
+ * 건반 keyId → 주파수 (피아노 클릭 시 사용)
+ * 검은 건반 keyId(Cs4, Ds4 …)를 주파수에 직접 매핑
+ */
+const KEYID_FREQ = {
+    'C4' :261.63, 'D4' :293.66, 'E4' :329.63, 'F4' :349.23,
+    'G4' :392.00, 'A4' :440.00, 'B4' :493.88,
+    'C5' :523.25, 'D5' :587.33, 'E5' :659.25, 'F5' :698.46,
+    'G5' :783.99, 'A5' :880.00, 'B5' :987.77,
+    'Cs4':277.18, 'Ds4':311.13, 'Fs4':369.99, 'Gs4':415.30, 'As4':466.16,
+    'Cs5':554.37, 'Ds5':622.25, 'Fs5':739.99, 'Gs5':830.61, 'As5':932.33
+};
+
+/* noteId('D♭4', 'F#5' 등) → 주파수. 플랫 표기도 ENHARMONIC으로 변환 */
+function noteNameToFreq(noteId) {
+    const oct  = noteId[noteId.length - 1];            /* 마지막 글자 = 옥타브 숫자 */
+    const name = noteId.slice(0, -1);                  /* 나머지 = 음이름 (예: 'D♭') */
+    const canonical = (ENHARMONIC[name] || name) + oct; /* 정규화 후 옥타브 재결합 */
+    return NOTE_FREQ[canonical] || null;
+}
+
+/*
+ * ★ playNote(noteId): 악보 음표 재생
+ * ──────────────────────────────────────────────────────────────
+ * 나중에 실제 음원으로 교체할 때는 이 함수 본문만 바꾸면 됨:
+ *   const audio = new Audio(`sounds/${noteId}.mp3`);
+ *   audio.play();
+ * ──────────────────────────────────────────────────────────────
+ */
+function playNote(noteId) {
+    const freq = noteNameToFreq(noteId);
+    if (!freq) return;
+    _pianoTone(freq, 0.9, 1.1); /* 음표: 비교적 긴 감쇠 */
+}
+
+/*
+ * ★ playKeyClick(keyId): 피아노 건반 클릭 시 음 재생
+ * ──────────────────────────────────────────────────────────────
+ * 교체 시: 위 playNote와 동일한 방식으로 음원 파일 사용
+ * ──────────────────────────────────────────────────────────────
+ */
+function playKeyClick(keyId) {
+    const freq = KEYID_FREQ[keyId];
+    if (!freq) return;
+    _pianoTone(freq, 0.5, 0.65); /* 클릭음: 짧고 경쾌하게 */
+}
+
+/*
+ * ★ playEffect(type): 정답/오답 효과음
+ * type: 'correct' | 'wrong'
+ * ──────────────────────────────────────────────────────────────
+ * 교체 시:
+ *   const sfx = new Audio(type === 'correct' ? 'sounds/correct.mp3' : 'sounds/wrong.mp3');
+ *   sfx.play();
+ * ──────────────────────────────────────────────────────────────
+ */
+function playEffect(type) {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    if (type === 'correct') {
+        /* 정답: 고주파(1800Hz) 사인파 단발 알림음 "띵~" — 음표와 명확히 구별 */
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1800, now);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.28);
+    } else {
+        /* 오답: 저주파(120Hz) 사각파 버저음 "부~" — 음표와 명확히 구별 */
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(120, now);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.28);
+    }
+}
+
+/*
+ * _pianoTone(freq, decay, duration, startAt?):
+ * sine 오실레이터 + 지수 감쇠 GainNode로 피아노 느낌 구현
+ * - 어택: 즉시 최대 볼륨
+ * - 감쇠(Decay): exponentialRamp → 피아노 현의 자연스러운 소멸
+ * 언더스코어(_) 접두사: 이 파일 내부에서만 사용하는 함수 표시 (Python 관례와 동일)
+ */
+function _pianoTone(freq, decay, duration, startAt) {
+    const ctx  = getAudioCtx();
+    const t    = (startAt !== undefined) ? startAt : ctx.currentTime;
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type = 'sine';                                    /* 순수 사인파: 맑고 부드러운 음색 */
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.45, t);                    /* 어택: 볼륨 0.45 로 시작 */
+    gain.gain.exponentialRampToValueAtTime(0.001, t + decay); /* 지수 감쇠 → 피아노 울림 */
+
+    osc.start(t);
+    osc.stop(t + duration);
+}
 
 /* ── 초기화 ──────────────────────────────────────────────────── */
 /*
