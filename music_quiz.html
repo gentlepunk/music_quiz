@@ -17,6 +17,11 @@
          * 형식: 선택자(대상) { 속성: 값; }
          */
 
+        /* ── CSS 변수: 뷰포트 기준 반응형 너비 ─────────────────── */
+        :root {
+            --card-w: min(490px, 96vw); /* 카드 최대 너비: PC는 490px, 모바일은 화면 96% */
+        }
+
         /* 모든 요소(*): 기본 여백/패딩 제거, 박스 크기 계산 방식 통일 */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,12 +35,14 @@
             align-items: center;    /* 가로 방향 가운데 정렬 */
             justify-content: center;/* 세로 방향 가운데 정렬 */
             gap: 20px;              /* 자식 요소 사이 간격 20px */
-            padding: 20px;          /* 내부 여백 20px */
+            /* clamp(최솟값, 기준값, 최댓값): 모바일에서 여백 줄어듦 */
+            padding: clamp(10px, 3vw, 20px);
         }
 
         /* h1: 제목 텍스트 스타일 */
         h1 {
-            font-size: 1.65rem;     /* rem: 기본 글꼴 크기의 배수 단위 */
+            /* clamp: 화면 너비에 따라 1.2rem~1.65rem 사이에서 자동 조정 */
+            font-size: clamp(1.2rem, 4vw, 1.65rem);
             font-weight: 700;       /* 굵기 (700 = 굵게) */
             color: #2d3748;         /* 진한 회색 */
         }
@@ -80,10 +87,11 @@
             border-radius: 18px;    /* 모서리를 둥글게 */
             padding: 22px 28px 18px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: var(--card-w);   /* 반응형: 뷰포트에 맞게 축소 */
         }
 
-        /* SVG(악보 그래픽): 블록 요소로 표시 */
-        #staff-svg { display: block; }
+        /* SVG(악보 그래픽): 블록 요소로 표시. width:100%로 카드 너비에 맞게 자동 축소 */
+        #staff-svg { display: block; width: 100%; height: auto; }
 
         /*
          * CSS 애니메이션: 음표가 위에서 내려오며 나타나는 효과
@@ -98,7 +106,7 @@
 
         /* ── 타이머 바 ────────────────────────────────────────── */
         .timer-wrap {
-            width: 490px;
+            width: var(--card-w);   /* 반응형: 카드 너비와 동일하게 */
             height: 10px;
             background: #e2e8f0;    /* 회색 배경 (빈 부분) */
             border-radius: 99px;
@@ -132,6 +140,9 @@
             position: relative;     /* 자식 요소를 절대 좌표로 배치하기 위한 기준점 */
             height: 145px;
             filter: drop-shadow(0 6px 16px rgba(0,0,0,0.22)); /* 전체 피아노에 그림자 */
+            width: var(--card-w);   /* 반응형: 카드 너비 기준 */
+            overflow: visible;      /* 건반이 컨테이너 밖으로 나가도 클리핑 안 함 */
+            transform-origin: top left; /* scaleX 기준점: 왼쪽 상단 */
         }
 
         /* 건반 공통 스타일 */
@@ -216,7 +227,7 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
-            width: 420px;
+            width: var(--card-w);   /* 반응형: 고정 420px → 뷰포트 기준 */
         }
 
         .option-group { display: flex; flex-direction: column; gap: 10px; }
@@ -265,7 +276,13 @@
         .start-btn:active { transform: translateY(0); }
 
         /* ── 퀴즈 화면 상단 행 ────────────────────────────────── */
-        .quiz-top-row { display: flex; gap: 12px; align-items: center; }
+        .quiz-top-row {
+            display: flex;
+            gap: 8px;               /* 모바일에서 간격 축소 (PC에서는 충분) */
+            align-items: center;
+            width: var(--card-w);   /* 반응형: 카드 너비에 맞춤 */
+            flex-wrap: wrap;        /* 좁은 화면에서 줄바꿈 허용 */
+        }
 
         /* 설정 배지 (퀴즈 화면 우측) */
         .setting-badge {
@@ -301,7 +318,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
-            width: 420px;
+            width: var(--card-w);   /* 반응형: 고정 420px → 뷰포트 기준 */
         }
 
         /* 큰 점수 숫자 */
@@ -1257,6 +1274,7 @@ function next() {
     /* 음자리표 갱신 및 건반 재생성 */
     drawClef(activeClef);
     buildPiano(activeClef);
+    scalePiano(); /* 건반 재생성 후 스케일 재계산 */
     /* 현재 음자리표에 맞는 음표 풀 갱신 */
     notePool = buildNotePool(currentKeySig, activeClef);
 
@@ -1680,6 +1698,26 @@ function _pianoTone(freq, decay, duration, startAt) {
     osc.stop(t + duration);
 }
 
+/* ── 피아노 반응형 스케일 ─────────────────────────────────────── */
+
+/*
+ * scalePiano(): 피아노 건반을 카드 너비에 맞게 가로 스케일 조정
+ * 건반 실제 너비(흰건반 14개 × WHITE_W)가 카드보다 넓으면 축소
+ * transform: scaleX() 로 클릭 좌표는 변하지 않으므로 answer() 동작에 영향 없음
+ */
+function scalePiano() {
+    const piano = document.getElementById('piano');
+    const cardW = piano.parentElement.offsetWidth; /* 부모(.screen) 의 실제 표시 너비 */
+    const pianoW = WHITE_W * 14;                   /* 흰건반 14개 기준 피아노 고유 너비 */
+    const scale = Math.min(1, cardW / pianoW);     /* 1을 초과하면 확대 안 함 */
+    piano.style.transform = `scaleX(${scale})`;
+    /* 건반 컨테이너 높이도 축소 비율에 맞게 조정 */
+    piano.style.height = (145 * scale) + 'px';
+}
+
+/* 창 크기가 바뀔 때마다 피아노 스케일 재계산 */
+window.addEventListener('resize', scalePiano);
+
 /* ── 초기화 ──────────────────────────────────────────────────── */
 /*
  * 페이지 로드 시 즉시 실행 (Python의 if __name__ == '__main__': 아래 코드와 유사)
@@ -1688,6 +1726,7 @@ function _pianoTone(freq, decay, duration, startAt) {
  */
 initStaff();
 buildPiano('treble');
+scalePiano();
 </script>
 </body>
 </html>
