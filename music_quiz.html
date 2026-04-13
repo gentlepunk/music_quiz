@@ -480,8 +480,8 @@
             <div class="option-group-label">제한 시간</div>
             <div class="option-btns" id="t-btns">
                 <!-- data-sec="0"은 타이머 OFF를 의미 -->
-                <button class="opt-btn active" data-sec="5">5초</button>
-                <button class="opt-btn"        data-sec="7">7초</button>
+                <button class="opt-btn"        data-sec="5">5초</button>
+                <button class="opt-btn active" data-sec="7">7초</button>
                 <button class="opt-btn"        data-sec="10">10초</button>
                 <button class="opt-btn"        data-sec="0">OFF</button>
             </div>
@@ -500,16 +500,16 @@
         <div class="option-group">
             <div class="option-group-label">음표 소리</div>
             <div class="option-btns" id="ns-btns">
-                <button class="opt-btn active" data-notesound="on">ON</button>
-                <button class="opt-btn"        data-notesound="off">OFF</button>
+                <button class="opt-btn"        data-notesound="on">ON</button>
+                <button class="opt-btn active" data-notesound="off">OFF</button>
             </div>
         </div>
         <!-- 효과음 ON/OFF -->
         <div class="option-group">
             <div class="option-group-label">효과음 (정답/오답)</div>
             <div class="option-btns" id="fx-btns">
-                <button class="opt-btn active" data-effect="on">ON</button>
-                <button class="opt-btn"        data-effect="off">OFF</button>
+                <button class="opt-btn"        data-effect="on">ON</button>
+                <button class="opt-btn active" data-effect="off">OFF</button>
             </div>
         </div>
         <button class="start-btn" id="start-btn">시작하기 →</button>
@@ -746,12 +746,12 @@ let ok = true;      /* 현재 입력 받을 수 있는지 여부 (중복 클릭 
 let combo = 0;      /* 현재 연속 정답 수 */
 let maxCombo = 0;   /* 최고 연속 정답 수 */
 let totalQ = 10;    /* 총 문제 수 (기본값 10) */
-let settingSec = 5; /* 설정된 제한 시간 (기본값 5초) */
+let settingSec = 7; /* 설정된 제한 시간 (기본값 7초) */
 let quizStartTime = 0; /* 퀴즈 시작 시각 (밀리초 타임스탬프) */
 let wrongMap = {};  /* 틀린 음 통계. Python 딕셔너리처럼 {음이름: 틀린횟수} */
 let settingDifficulty = 'beginner'; /* 선택된 난이도: 'beginner' | 'intermediate' | 'advanced' */
-let settingNoteSound  = true;       /* 음표 소리 ON/OFF */
-let settingEffect     = true;       /* 정답/오답 효과음 ON/OFF */
+let settingNoteSound  = false;      /* 음표 소리 ON/OFF */
+let settingEffect     = false;      /* 정답/오답 효과음 ON/OFF */
 let currentKeySig = null;           /* 현재 퀴즈에서 사용 중인 조성 객체 */
 let notePool = [];                  /* 현재 조성에서 출제 가능한 음표 목록 */
 let retryWrongMode = false;         /* 틀린 문제 집중 재출제 모드 여부 */
