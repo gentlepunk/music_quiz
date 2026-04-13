@@ -284,18 +284,6 @@
             flex-wrap: wrap;        /* 좁은 화면에서 줄바꿈 허용 */
         }
 
-        /* 설정 배지 (퀴즈 화면 우측) */
-        .setting-badge {
-            margin-left: auto;
-            background: #fff;
-            border-radius: 999px;
-            padding: 7px 14px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: #718096;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-            white-space: nowrap;
-        }
 
         /* 진행 상황 표시 (현재문제/총문제) */
         .progress {
@@ -514,11 +502,6 @@
                 padding: 7px 14px;
             }
 
-            .setting-badge {
-                font-size: 0.78rem;
-                white-space: nowrap;
-                padding: 7px 10px;
-            }
         }
     </style>
 </head>
@@ -604,8 +587,6 @@
         <div class="progress"><span class="cur" id="prog-cur">0</span> / <span id="prog-tot">10</span></div>
         <!-- 콤보 표시 (항상 표시, 2 미만이면 회색 기본색) -->
         <div class="combo" id="combo"></div>
-        <!-- 설정 요약 배지: 제한 시간 + 소리 꺼짐 아이콘 -->
-        <div class="setting-badge" id="setting-badge"></div>
     </div>
 
     <!-- 타이머 바: 내부 div의 width를 줄여서 시간 경과를 표시 -->
@@ -1298,7 +1279,6 @@ function startQuiz() {
     document.getElementById('prog-tot').textContent = totalQ;
     document.getElementById('prog-cur').textContent = 0;
     renderCombo();
-    updateSettingBadge(); /* 설정 배지 갱신 */
     showScreen('screen-quiz');
     /* 화면 전환 후 조표 및 힌트 렌더링 */
     renderKeySignature(currentKeySig);
@@ -1541,26 +1521,6 @@ setupOptBtns('ns-btns', ({ notesound }) => { settingNoteSound   = (notesound ===
 /* 효과음 버튼 그룹 */
 setupOptBtns('fx-btns', ({ effect })    => { settingEffect      = (effect    === 'on'); });
 
-/*
- * updateSettingBadge(): 퀴즈 화면 우측 설정 배지 갱신
- * 제한 시간 + 소리 꺼짐 아이콘 표시
- *   🔇 음표 소리, 효과음 모두 OFF
- *   🔕 효과음만 OFF
- *   🔈 음표 소리만 OFF (효과음은 ON)
- */
-function updateSettingBadge() {
-    const badge = document.getElementById('setting-badge');
-    const timeLabel = settingSec === 0 ? '∞' : settingSec + '초';
-    let icon = '';
-    if (!settingNoteSound && !settingEffect) {
-        icon = ' 🔇';
-    } else if (!settingEffect) {
-        icon = ' 🔕';
-    } else if (!settingNoteSound) {
-        icon = ' 🔈';
-    }
-    badge.textContent = '⚙ ' + timeLabel + icon;
-}
 
 /* 시작하기 버튼 클릭 이벤트 */
 document.getElementById('start-btn').addEventListener('click', startQuiz);
