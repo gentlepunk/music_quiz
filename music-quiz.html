@@ -271,6 +271,19 @@
         /* ── 퀴즈 화면 상단 행 ────────────────────────────────── */
         .quiz-top-row { display: flex; gap: 12px; align-items: center; }
 
+        /* 설정 배지 (퀴즈 화면 우측) */
+        .setting-badge {
+            margin-left: auto;
+            background: #fff;
+            border-radius: 999px;
+            padding: 7px 14px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #718096;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+
         /* 진행 상황 표시 (현재문제/총문제) */
         .progress {
             background: #fff;
@@ -450,6 +463,22 @@
                 <button class="opt-btn"        data-diff="advanced">고급</button>
             </div>
         </div>
+        <!-- 음표 소리 ON/OFF -->
+        <div class="option-group">
+            <div class="option-group-label">음표 소리</div>
+            <div class="option-btns" id="ns-btns">
+                <button class="opt-btn active" data-notesound="on">ON</button>
+                <button class="opt-btn"        data-notesound="off">OFF</button>
+            </div>
+        </div>
+        <!-- 효과음 ON/OFF -->
+        <div class="option-group">
+            <div class="option-group-label">효과음 (정답/오답)</div>
+            <div class="option-btns" id="fx-btns">
+                <button class="opt-btn active" data-effect="on">ON</button>
+                <button class="opt-btn"        data-effect="off">OFF</button>
+            </div>
+        </div>
         <button class="start-btn" id="start-btn">시작하기 →</button>
     </div>
 </div>
@@ -465,6 +494,8 @@
         <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
         <!-- id="prog-cur": 현재 문제 번호, id="prog-tot": 전체 문제 수 -->
         <div class="progress"><span class="cur" id="prog-cur">0</span> / <span id="prog-tot">10</span></div>
+        <!-- 설정 요약 배지: 제한 시간 + 소리 꺼짐 아이콘 -->
+        <div class="setting-badge" id="setting-badge"></div>
     </div>
 
     <!-- 콤보 표시 (2연속 이상 정답 시 나타남) -->
@@ -683,6 +714,8 @@ let settingSec = 5; /* 설정된 제한 시간 (기본값 5초) */
 let quizStartTime = 0; /* 퀴즈 시작 시각 (밀리초 타임스탬프) */
 let wrongMap = {};  /* 틀린 음 통계. Python 딕셔너리처럼 {음이름: 틀린횟수} */
 let settingDifficulty = 'beginner'; /* 선택된 난이도: 'beginner' | 'intermediate' | 'advanced' */
+let settingNoteSound  = true;       /* 음표 소리 ON/OFF */
+let settingEffect     = true;       /* 정답/오답 효과음 ON/OFF */
 let currentKeySig = null;           /* 현재 퀴즈에서 사용 중인 조성 객체 */
 let notePool = [];                  /* 현재 조성에서 출제 가능한 음표 목록 */
 
@@ -1037,6 +1070,7 @@ function startQuiz() {
     document.getElementById('prog-tot').textContent = totalQ;
     document.getElementById('prog-cur').textContent = 0;
     renderCombo();
+    updateSettingBadge(); /* 설정 배지 갱신 */
     showScreen('screen-quiz');
     /* 화면 전환 후 조표 및 힌트 렌더링 */
     renderKeySignature(currentKeySig);
@@ -1170,11 +1204,36 @@ function setupOptBtns(groupId, onChange) {
 }
 
 /* 문제 수 버튼 그룹: data-q 값을 읽어 totalQ 변수 업데이트 */
-setupOptBtns('q-btns', ({ q })    => { totalQ             = parseInt(q,   10); }); /* parseInt: 문자열→정수 변환 */
+setupOptBtns('q-btns', ({ q })          => { totalQ            = parseInt(q,   10); }); /* parseInt: 문자열→정수 변환 */
 /* 제한 시간 버튼 그룹: data-sec 값을 읽어 settingSec 변수 업데이트 */
-setupOptBtns('t-btns', ({ sec })  => { settingSec          = parseInt(sec, 10); });
+setupOptBtns('t-btns', ({ sec })        => { settingSec         = parseInt(sec, 10); });
 /* 난이도 버튼 그룹: data-diff 값을 읽어 settingDifficulty 변수 업데이트 */
-setupOptBtns('d-btns', ({ diff }) => { settingDifficulty   = diff; });
+setupOptBtns('d-btns', ({ diff })       => { settingDifficulty  = diff; });
+/* 음표 소리 버튼 그룹 */
+setupOptBtns('ns-btns', ({ notesound }) => { settingNoteSound   = (notesound === 'on'); });
+/* 효과음 버튼 그룹 */
+setupOptBtns('fx-btns', ({ effect })    => { settingEffect      = (effect    === 'on'); });
+
+/*
+ * updateSettingBadge(): 퀴즈 화면 우측 설정 배지 갱신
+ * 제한 시간 + 소리 꺼짐 아이콘 표시
+ *   🔇 음표 소리, 효과음 모두 OFF
+ *   🔕 효과음만 OFF
+ *   🔈 음표 소리만 OFF (효과음은 ON)
+ */
+function updateSettingBadge() {
+    const badge = document.getElementById('setting-badge');
+    const timeLabel = settingSec === 0 ? '∞' : settingSec + '초';
+    let icon = '';
+    if (!settingNoteSound && !settingEffect) {
+        icon = ' 🔇';
+    } else if (!settingEffect) {
+        icon = ' 🔕';
+    } else if (!settingNoteSound) {
+        icon = ' 🔈';
+    }
+    badge.textContent = '⚙ ' + timeLabel + icon;
+}
 
 /* 시작하기 버튼 클릭 이벤트 */
 document.getElementById('start-btn').addEventListener('click', startQuiz);
@@ -1248,6 +1307,7 @@ function noteNameToFreq(noteId) {
  * ──────────────────────────────────────────────────────────────
  */
 function playNote(noteId) {
+    if (!settingNoteSound) return; /* 음표 소리 OFF면 재생 안 함 */
     const freq = noteNameToFreq(noteId);
     if (!freq) return;
     _pianoTone(freq, 0.9, 1.1); /* 음표: 비교적 긴 감쇠 */
@@ -1260,6 +1320,7 @@ function playNote(noteId) {
  * ──────────────────────────────────────────────────────────────
  */
 function playKeyClick(keyId) {
+    if (!settingNoteSound) return; /* 음표 소리 OFF면 재생 안 함 */
     const freq = KEYID_FREQ[keyId];
     if (!freq) return;
     _pianoTone(freq, 0.5, 0.65); /* 클릭음: 짧고 경쾌하게 */
@@ -1275,6 +1336,7 @@ function playKeyClick(keyId) {
  * ──────────────────────────────────────────────────────────────
  */
 function playEffect(type) {
+    if (!settingEffect) return; /* 효과음 OFF면 재생 안 함 */
     const ctx = getAudioCtx();
     const now = ctx.currentTime;
     if (type === 'correct') {
