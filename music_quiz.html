@@ -68,9 +68,8 @@
             font-size: 0.95rem;
             font-weight: 600;
             box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-            display: none;          /* 기본적으로 숨겨져 있음 */
+            display: block;         /* 항상 표시 */
         }
-        .combo.show { display: block; }     /* 'show' 클래스 추가 시 표시 */
         .combo.c2  { color: #2b6cb0; }      /* 2콤보 이상: 파란색 */
         .combo.c5  { color: #c05621; }      /* 5콤보 이상: 주황색 */
         .combo.c10 { color: #c53030; font-weight: 800; } /* 10콤보 이상: 빨간색 + 더 굵게 */
@@ -522,18 +521,17 @@
 <div id="screen-quiz" class="screen">
     <h1>🎵 음표 맞추기</h1>
 
-    <!-- 상단 정보 행: 점수 + 진행 상황 -->
+    <!-- 상단 정보 행: 점수 + 진행 상황 + 콤보 + 설정 배지 -->
     <div class="quiz-top-row">
         <!-- id="sc": 정답 수, id="tot": 총 시도 수 -->
         <div class="score">점수: <b id="sc">0</b> / <b id="tot">0</b></div>
         <!-- id="prog-cur": 현재 문제 번호, id="prog-tot": 전체 문제 수 -->
         <div class="progress"><span class="cur" id="prog-cur">0</span> / <span id="prog-tot">10</span></div>
+        <!-- 콤보 표시 (항상 표시, 2 미만이면 회색 기본색) -->
+        <div class="combo" id="combo"></div>
         <!-- 설정 요약 배지: 제한 시간 + 소리 꺼짐 아이콘 -->
         <div class="setting-badge" id="setting-badge"></div>
     </div>
-
-    <!-- 콤보 표시 (2연속 이상 정답 시 나타남) -->
-    <div class="combo" id="combo"></div>
 
     <!-- 타이머 바: 내부 div의 width를 줄여서 시간 경과를 표시 -->
     <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
@@ -825,14 +823,20 @@ function timeout() {
 
 /*
  * renderCombo(): 콤보 표시 업데이트
- * 2 미만이면 숨기고, 이상이면 콤보 수에 따라 색상 클래스 적용
+ * 항상 "🔥 {combo}" 형태로 표시. 2 미만이면 기본색(회색), 이상이면 c2/c5/c10 색상 클래스 적용
  */
 function renderCombo() {
     const el = document.getElementById('combo');
-    if (combo < 2) { el.className = 'combo'; return; } /* 클래스 초기화 → 숨김 */
-    el.textContent = `🔥 ${combo} 콤보!`;
-    /* 삼항 연산자 중첩: Python의 조건부 표현식 (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2') */
-    el.className = 'combo show ' + (combo >= 10 ? 'c10' : combo >= 5 ? 'c5' : 'c2');
+    el.textContent = `🔥 ${combo}`;
+    if (combo >= 10) {
+        el.className = 'combo c10';
+    } else if (combo >= 5) {
+        el.className = 'combo c5';
+    } else if (combo >= 2) {
+        el.className = 'combo c2';
+    } else {
+        el.className = 'combo'; /* 회색(기본색) */
+    }
 }
 
 /* ── 조성 관련 함수 ───────────────────────────────────────────── */
