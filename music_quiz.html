@@ -166,7 +166,6 @@
             transform: translateY(2px); /* 2px 아래로 내려가는 효과 (건반 누르는 느낌) */
             background: linear-gradient(to bottom, #bfdbfe, #dbeafe);
         }
-        .key.white .solfege { font-size: 0.72rem; font-weight: 600; color: #718096; }
         .key.white .note-id { font-size: 0.82rem; color: #2d3748; font-weight: 400; }
 
         /* 검은 건반 스타일 */
@@ -204,9 +203,7 @@
             border-color: #e53e3e !important;
         }
         /* 정답/오답 건반의 텍스트 색상도 함께 변경 */
-        .key.white.correct .solfege,
         .key.white.correct .note-id { color: #22543d; }
-        .key.white.wrong   .solfege,
         .key.white.wrong   .note-id { color: #742a2a; }
         .key.black.correct .note-id { color: #22543d; }
         .key.black.wrong   .note-id { color: #742a2a; }
@@ -687,23 +684,23 @@ const ALL_NOTES = [...WHITE_NOTES, ...BLACK_NOTES];
 const KEY_SIGNATURES = {
     beginner: [
         /* 다장조 (C major): 샵/플랫 없음. 흰 건반만 사용 */
-        { id:'C', name:'다장조', sharps:[], flats:[], hint:'' }
+        { id:'C', code:'C major',  name:'다장조', sharps:[], flats:[], hint:'' }
     ],
     intermediate: [
         /* 사장조 (G major): F# 1개 */
-        { id:'G', name:'사장조',  sharps:['F'],     flats:[], hint:'F# 주의' },
+        { id:'G', code:'G major',  name:'사장조',  sharps:['F'],     flats:[], hint:'F# 주의' },
         /* 라장조 (D major): F#, C# 2개 */
-        { id:'D', name:'라장조',  sharps:['F','C'], flats:[], hint:'F#, C# 주의' }
+        { id:'D', code:'D major',  name:'라장조',  sharps:['F','C'], flats:[], hint:'F#, C# 주의' }
     ],
     advanced: [
         /* 가장조 (A major): F#, C#, G# 3개 */
-        { id:'A',  name:'가장조',    sharps:['F','C','G'],     flats:[],              hint:'F#, C#, G# 주의' },
+        { id:'A',  code:'A major',  name:'가장조',    sharps:['F','C','G'],     flats:[],              hint:'F#, C#, G# 주의' },
         /* 마장조 (E major): F#, C#, G#, D# 4개 */
-        { id:'E',  name:'마장조',    sharps:['F','C','G','D'], flats:[],              hint:'F#, C#, G#, D# 주의' },
+        { id:'E',  code:'E major',  name:'마장조',    sharps:['F','C','G','D'], flats:[],              hint:'F#, C#, G#, D# 주의' },
         /* 내림마장조 (Eb major): Bb, Eb, Ab 3개 */
-        { id:'Eb', name:'내림마장조', sharps:[],                flats:['B','E','A'],   hint:'Bb, Eb, Ab 주의' },
+        { id:'Eb', code:'Eb major', name:'내림마장조', sharps:[],                flats:['B','E','A'],   hint:'Bb, Eb, Ab 주의' },
         /* 내림가장조 (Ab major): Bb, Eb, Ab, Db 4개 */
-        { id:'Ab', name:'내림가장조', sharps:[],                flats:['B','E','A','D'], hint:'Bb, Eb, Ab, Db 주의' }
+        { id:'Ab', code:'Ab major', name:'내림가장조', sharps:[],                flats:['B','E','A','D'], hint:'Bb, Eb, Ab, Db 주의' }
     ]
 };
 
@@ -895,7 +892,7 @@ function renderKeySignature(keySig) {
         hint.className = 'key-hint'; /* 다장조: 힌트 숨김 */
         return;
     }
-    hint.textContent = `현재 조성: ${keySig.name} (${keySig.hint})`;
+    hint.textContent = `현재 조성: ${keySig.code} (${keySig.hint})`;
     hint.className = 'key-hint show';
 
     /* ── 조표 SVG 그리기 ─────────────────────────────────────
@@ -1064,9 +1061,7 @@ function buildPiano() {
         k.style.left = (i * WHITE_W) + 'px';    /* 절대 위치: 인덱스 × 건반 너비 */
         k.dataset.keyid = n.keyId;               /* data-keyid 속성 설정 */
         /* innerHTML: 내부 HTML을 문자열로 설정. 템플릿 리터럴 사용 */
-        k.innerHTML =
-            `<span class="note-id">${n.id}</span>` +
-            `<span class="solfege">${n.label}</span>`;
+        k.innerHTML = `<span class="note-id">${n.id}</span>`;
         /* addEventListener: 이벤트 리스너 등록 (Python의 button.bind('click', func)와 유사) */
         k.addEventListener('click', () => { playKeyClick(n.keyId); answer(n.keyId, k); });
         piano.appendChild(k); /* 피아노 컨테이너에 건반 추가 */
